@@ -7,14 +7,14 @@ using System.Windows.Input;
 
 namespace Andrei15193.Interactive
 {
-    public class ViewModel<TDataContext>
+    public class ViewModel
         : PropertyChangedNotifier
     {
         private static readonly IEqualityComparer<string> StateStringComparer = StringComparer.OrdinalIgnoreCase;
 
         public sealed class ActionStateContext
         {
-            internal ActionStateContext(ViewModel<TDataContext> viewModel, string sourceState)
+            internal ActionStateContext(ViewModel viewModel, string sourceState)
             {
                 if (viewModel == null)
                     throw new ArgumentNullException(nameof(viewModel));
@@ -28,7 +28,7 @@ namespace Andrei15193.Interactive
                 PreviousState = sourceState;
             }
 
-            public ViewModel<TDataContext> ViewMode { get; }
+            public ViewModel ViewMode { get; }
 
             public string PreviousState { get; }
 
@@ -133,10 +133,10 @@ namespace Andrei15193.Interactive
             : ICommand
         {
             private bool _isInBoundState;
-            private readonly ViewModel<TDataContext> _viewModel;
+            private readonly ViewModel _viewModel;
             private readonly ICommand _command;
 
-            public BoundCommand(ViewModel<TDataContext> viewModel, ICommand command)
+            public BoundCommand(ViewModel viewModel, ICommand command)
             {
                 if (viewModel == null)
                     throw new ArgumentNullException(nameof(viewModel));
@@ -178,10 +178,10 @@ namespace Andrei15193.Interactive
         protected sealed class TransitionCommand
             : ICommand
         {
-            private readonly ViewModel<TDataContext> _viewModel;
+            private readonly ViewModel _viewModel;
             private readonly string _destinationState;
 
-            internal TransitionCommand(ViewModel<TDataContext> viewModel, string destinationState)
+            internal TransitionCommand(ViewModel viewModel, string destinationState)
             {
                 if (viewModel == null)
                     throw new ArgumentNullException(nameof(viewModel));
@@ -211,7 +211,7 @@ namespace Andrei15193.Interactive
         private readonly CancellationCommand _cancelCommand;
         private readonly IDictionary<string, ViewModelState> _states = new Dictionary<string, ViewModelState>(StateStringComparer);
 
-        public ViewModel(TDataContext dataContext)
+        internal ViewModel(object dataContext)
         {
             if (dataContext == null)
                 throw new ArgumentNullException(nameof(dataContext));
@@ -220,7 +220,7 @@ namespace Andrei15193.Interactive
             _cancelCommand = new CancellationCommand();
         }
 
-        public TDataContext DataContext
+        public object DataContext
         {
             get;
         }
@@ -324,5 +324,17 @@ namespace Andrei15193.Interactive
 
         protected TransitionCommand GetTransitionCommand(string destinationState)
             => new TransitionCommand(this, destinationState);
+    }
+
+    public class ViewModel<TDataContext>
+        : ViewModel
+    {
+        public ViewModel(TDataContext dataContext)
+            : base(dataContext)
+        {
+            DataContext = dataContext;
+        }
+
+        new public TDataContext DataContext { get; }
     }
 }
