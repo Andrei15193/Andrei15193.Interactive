@@ -1,0 +1,58 @@
+﻿<Page
+    x:Class="Andrei15193.Interactive.Tests.Windows.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Andrei15193.Interactive.Tests.Windows"
+    xmlns:i="using:Andrei15193.Interactive"
+    i:Interactive.ViewModel="{Binding}"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <SolidColorBrush
+            x:Name="Brush"
+            Color="White" />
+    </Page.Resources>
+    <Page.DataContext>
+        <local:TestViewModel />
+    </Page.DataContext>
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState
+                    x:Name="State1">
+                    <Storyboard>
+                        <ColorAnimation
+                            Storyboard.TargetName="Brush"
+                            Storyboard.TargetProperty="Color"
+                            Duration="0" />
+                    </Storyboard>
+                </VisualState>
+                <VisualState
+                    x:Name="State2">
+                    <Storyboard>
+                        <ColorAnimation
+                            Storyboard.TargetName="Brush"
+                            Storyboard.TargetProperty="Color"
+                            To="Red"
+                            Duration="0" />
+                    </Storyboard>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Rectangle
+            Width="100"
+            Height="100"
+            Fill="{StaticResource Brush}" />
+    </Grid>
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton
+                Icon="Back"
+                Label="State 1"
+                Command="{Binding GoToState1Command}" />
+            <AppBarButton
+                Icon="Forward"
+                Label="State 2"
+                Command="{Binding GoToState2Command}" />
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>
