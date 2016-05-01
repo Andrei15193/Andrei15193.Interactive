@@ -4,47 +4,45 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Andrei15193.Interactive.Tests.WindowsPhone"
     xmlns:i="using:Andrei15193.Interactive"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    i:Interactive.ViewModel="{Binding}">
+    <Page.Resources>
+        <SolidColorBrush
+            x:Name="Brush"
+            Color="White" />
+    </Page.Resources>
     <Page.DataContext>
         <local:TestViewModel />
     </Page.DataContext>
-    <UserControl
-        i:Interactive.ViewModel="{Binding}">
-        <Grid>
-            <VisualStateManager.VisualStateGroups>
-                <VisualStateGroup>
-                    <VisualState
-                        x:Name="State1">
-                        <Storyboard>
-                            <ColorAnimation
-                                Storyboard.TargetName="Brush"
-                                Storyboard.TargetProperty="Color"
-                                Duration="0" />
-                        </Storyboard>
-                    </VisualState>
-                    <VisualState
-                        x:Name="State2">
-                        <Storyboard>
-                            <ColorAnimation
-                                Storyboard.TargetName="Brush"
-                                Storyboard.TargetProperty="Color"
-                                To="Red"
-                                Duration="0" />
-                        </Storyboard>
-                    </VisualState>
-                </VisualStateGroup>
-            </VisualStateManager.VisualStateGroups>
-            <Grid.Resources>
-                <SolidColorBrush
-                    x:Name="Brush"
-                    Color="White" />
-            </Grid.Resources>
-            <Rectangle
-                Width="100"
-                Height="100"
-                Fill="{StaticResource Brush}" />
-        </Grid>
-    </UserControl>
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState
+                    x:Name="State1">
+                    <Storyboard>
+                        <ColorAnimation
+                            Storyboard.TargetName="Brush"
+                            Storyboard.TargetProperty="Color"
+                            Duration="0" />
+                    </Storyboard>
+                </VisualState>
+                <VisualState
+                    x:Name="State2">
+                    <Storyboard>
+                        <ColorAnimation
+                            Storyboard.TargetName="Brush"
+                            Storyboard.TargetProperty="Color"
+                            To="Red"
+                            Duration="0" />
+                    </Storyboard>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Rectangle
+            Width="100"
+            Height="100"
+            Fill="{StaticResource Brush}" />
+    </Grid>
     <Page.BottomAppBar>
         <CommandBar>
             <AppBarButton
