@@ -18,10 +18,10 @@ namespace Andrei15193.Interactive.Tests
         private const string DestinationState = "destinationTestState";
         private const string FinalState = "finalTestState";
 
-        private sealed class MockViewModel<TContext>
-            : ViewModel<TContext>
+        private sealed class MockViewModel<TDataContext>
+            : ViewModel<TDataContext>
         {
-            public MockViewModel(TContext context)
+            public MockViewModel(TDataContext context)
                 : base(context)
             {
             }
