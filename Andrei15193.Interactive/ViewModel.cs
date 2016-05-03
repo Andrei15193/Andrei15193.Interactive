@@ -215,7 +215,7 @@ namespace Andrei15193.Interactive
             _cancelCommand = new CancellationCommand();
         }
 
-        public object Model
+        protected object Model
         {
             get;
         }
