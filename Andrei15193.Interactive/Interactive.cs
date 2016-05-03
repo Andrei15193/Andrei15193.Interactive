@@ -21,23 +21,45 @@ namespace Andrei15193.Interactive
             {
                 var viewModel = e.OldValue as ViewModel;
                 if (viewModel != null)
+                {
                     viewModel.PropertyChanged -= GetPropertyChangedEventHandler(control, viewModel);
+                    control.Loaded -=
+                        delegate
+                        {
+                            _TryGoToCurrentState(control, viewModel);
+                        };
+                }
 
                 viewModel = e.NewValue as ViewModel;
                 if (viewModel != null)
+                {
                     viewModel.PropertyChanged += GetPropertyChangedEventHandler(control, viewModel);
+                    if (!_TryGoToCurrentState(control, viewModel, "Registering to Control.Loaded event."))
+                        control.Loaded +=
+                            delegate
+                            {
+                                _TryGoToCurrentState(control, viewModel);
+                            };
+                }
             }
         }
+
         private static PropertyChangedEventHandler GetPropertyChangedEventHandler(Control control, ViewModel viewModel)
             => (sender, e) =>
             {
                 if (nameof(viewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                {
-                    var state = viewModel.State;
-                    if (!VisualStateManager.GoToState(control, state, GetUseTransitions(control)))
-                        Debug.WriteLine($"Could not navigated to {state}.");
-                }
+                    _TryGoToCurrentState(control, viewModel);
             };
+
+        private static bool _TryGoToCurrentState(Control control, ViewModel viewModel, string debugMessage = null)
+        {
+            var viewModelState = viewModel.State;
+            if (VisualStateManager.GoToState(control, viewModelState, GetUseTransitions(control)))
+                return true;
+
+            Debug.WriteLine($"Could not navigated to {viewModelState}. " + (debugMessage ?? string.Empty));
+            return false;
+        }
 
         public static ViewModel GetViewModel(DependencyObject dependencyObject)
             => (ViewModel)dependencyObject.GetValue(ViewModelProperty);
