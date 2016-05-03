@@ -18,11 +18,6 @@ namespace Andrei15193.Interactive
             {
                 if (viewModel == null)
                     throw new ArgumentNullException(nameof(viewModel));
-                if (string.IsNullOrWhiteSpace(sourceState))
-                    if (sourceState == null)
-                        throw new ArgumentNullException(nameof(sourceState));
-                    else
-                        throw new ArgumentException("Cannot be empty or white space!", nameof(sourceState));
 
                 ViewMode = viewModel;
                 PreviousState = sourceState;
@@ -278,7 +273,7 @@ namespace Andrei15193.Interactive
                     ViewModelState viewModelState;
                     while (_states.TryGetValue(nextState, out viewModelState))
                     {
-                        var actionStateContext = new ActionStateContext(this, State);
+                        var actionStateContext = new ActionStateContext(this, _state);
                         State = nextState;
 
                         if (viewModelState.IsCancellable)

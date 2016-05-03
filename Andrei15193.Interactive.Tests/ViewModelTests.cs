@@ -720,5 +720,28 @@ namespace Andrei15193.Interactive.Tests
             Assert.IsFalse(viewModel.GoToActionStateCommand.CanExecute(false));
             Assert.IsFalse(viewModel.GoToDestinationStateCommand.CanExecute(false));
         }
+
+        [TestMethod]
+        public async Task TestInitialStateCanBeAnActionState()
+        {
+            using (var continueEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    InitialState,
+                    context =>
+                    {
+                        context.NextState = FinalState;
+                        return Task.Factory.StartNew(continueEvent.Wait);
+                    });
+
+                var initialStateTransitionTask = ViewModel.TransitionToAsync(InitialState);
+                Assert.AreEqual(InitialState, ViewModel.State, ignoreCase: false);
+
+                continueEvent.Set();
+                await initialStateTransitionTask;
+            }
+
+            Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+        }
     }
 }
