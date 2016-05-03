@@ -18,11 +18,11 @@ namespace Andrei15193.Interactive.Tests
         private const string DestinationState = "destinationTestState";
         private const string FinalState = "finalTestState";
 
-        private sealed class MockViewModel<TModel>
-            : ViewModel<TModel>
+        private sealed class MockViewModel<TDataModel>
+            : ViewModel<TDataModel>
         {
-            public MockViewModel(TModel model)
-                : base(model)
+            public MockViewModel(TDataModel dataContext)
+                : base(dataContext)
             {
             }
 
@@ -93,27 +93,27 @@ namespace Andrei15193.Interactive.Tests
                 => _execute?.Invoke(parameter);
         }
 
-        private object Model { get; set; }
+        private object DataContext { get; set; }
         private MockViewModel<object> ViewModel { get; set; }
 
         [TestInitialize]
         public void TestInitialize()
         {
-            Model = new object();
-            ViewModel = new MockViewModel<object>(Model);
+            DataContext = new object();
+            ViewModel = new MockViewModel<object>(DataContext);
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
             ViewModel = null;
-            Model = null;
+            DataContext = null;
         }
 
         [TestMethod]
         public void TestContextGetsSetThroughConstructor()
         {
-            Assert.AreSame(Model, ViewModel.Model);
+            Assert.AreSame(DataContext, ViewModel.DataContext);
         }
 
         [TestMethod]

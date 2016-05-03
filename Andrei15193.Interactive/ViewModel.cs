@@ -206,16 +206,16 @@ namespace Andrei15193.Interactive
         private readonly CancellationCommand _cancelCommand;
         private readonly IDictionary<string, ViewModelState> _states = new Dictionary<string, ViewModelState>(StateStringComparer);
 
-        internal ViewModel(object model)
+        internal ViewModel(object dataContext)
         {
-            if (model == null)
-                throw new ArgumentNullException(nameof(model));
+            if (dataContext == null)
+                throw new ArgumentNullException(nameof(dataContext));
 
-            Model = model;
+            DataContext = dataContext;
             _cancelCommand = new CancellationCommand();
         }
 
-        protected object Model
+        protected object DataContext
         {
             get;
         }
@@ -321,15 +321,15 @@ namespace Andrei15193.Interactive
             => new TransitionCommand(this, destinationState);
     }
 
-    public class ViewModel<TModel>
+    public class ViewModel<TDataContext>
         : ViewModel
     {
-        public ViewModel(TModel model)
-            : base(model)
+        public ViewModel(TDataContext dataContext)
+            : base(dataContext)
         {
-            Model = model;
+            DataContext = dataContext;
         }
 
-        new public TModel Model { get; }
+        new public TDataContext DataContext { get; }
     }
 }
