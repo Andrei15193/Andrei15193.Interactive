@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Text.RegularExpressions;
 
 namespace Andrei15193.Interactive
 {
@@ -32,8 +31,6 @@ namespace Andrei15193.Interactive
         {
             if (propertyName == null)
                 throw new ArgumentNullException(nameof(propertyName));
-            if (!Regex.IsMatch(propertyName, "^[_a-z][_a-z0-9]*$", RegexOptions.IgnoreCase))
-                throw new ArgumentException("Must be a valid identifier", nameof(propertyName));
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

@@ -77,18 +77,38 @@ namespace Andrei15193.Interactive.Tests
             => PropertyChangedNotifier.NotifyPropertyChanged(null);
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void TestCannotRaiseEventWithEmptyStringPropertyName()
-            => PropertyChangedNotifier.NotifyPropertyChanged(string.Empty);
+        public void TestCanRaiseEventWithEmptyStringPropertyName()
+        {
+            var raiseCount = 0;
+            PropertyChangedNotifier.PropertyChanged += delegate { raiseCount++; };
+
+            PropertyChangedNotifier.NotifyPropertyChanged(string.Empty);
+
+            Assert.AreEqual(1, raiseCount);
+        }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void TestCannotRaiseEventInvalidIdentifierAsPropertyName()
-            => PropertyChangedNotifier.NotifyPropertyChanged("1");
+        public void TestCanRaiseEventWithInvalidIdentifierAsPropertyName()
+        {
+            var raiseCount = 0;
+            PropertyChangedNotifier.PropertyChanged += delegate { raiseCount++; };
+
+            PropertyChangedNotifier.NotifyPropertyChanged("1");
+
+            Assert.AreEqual(1, raiseCount);
+        }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public void TestPropertyNameIsNotTrimmed()
-            => PropertyChangedNotifier.NotifyPropertyChanged(" test ");
+        {
+            const string propertyName = " test ";
+            string actualPropertyName = null;
+            PropertyChangedNotifier.PropertyChanged +=
+                (sender, e) => actualPropertyName = e.PropertyName;
+
+            PropertyChangedNotifier.NotifyPropertyChanged(propertyName);
+
+            Assert.AreEqual(propertyName, actualPropertyName, ignoreCase: false);
+        }
     }
 }
