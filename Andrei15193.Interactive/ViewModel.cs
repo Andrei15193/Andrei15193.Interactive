@@ -12,55 +12,6 @@ namespace Andrei15193.Interactive
     {
         private static readonly IEqualityComparer<string> StateStringComparer = StringComparer.OrdinalIgnoreCase;
 
-        public class ActionStateContext
-        {
-            internal ActionStateContext(ViewModel viewModel, string sourceState)
-            {
-                if (viewModel == null)
-                    throw new ArgumentNullException(nameof(viewModel));
-
-                ViewModel = viewModel;
-                PreviousState = sourceState;
-            }
-
-            public ViewModel ViewModel { get; }
-
-            public string PreviousState { get; }
-
-            public string NextState { get; set; }
-        }
-
-        public class ErrorContext
-        {
-            internal ErrorContext(ViewModel viewModel, string faultedState)
-            {
-                ViewModel = viewModel;
-                FaultedState = faultedState;
-                IsCanceled = true;
-                AggregateException = null;
-            }
-            internal ErrorContext(ViewModel viewModel, string faultedState, AggregateException exception)
-            {
-                ViewModel = viewModel;
-                FaultedState = faultedState;
-                IsCanceled = false;
-                AggregateException = exception;
-            }
-
-            public ViewModel ViewModel { get; }
-
-            public string FaultedState { get; }
-
-            public string NextState { get; set; }
-
-            public bool IsCanceled { get; }
-
-            public Exception Exception
-                => AggregateException?.InnerException;
-
-            public AggregateException AggregateException { get; set; }
-        }
-
         private sealed class ViewModelState
         {
             private readonly Action<ActionStateContext> _action;
