@@ -213,7 +213,7 @@ namespace Andrei15193.Interactive
             primaryButton.Click +=
                     delegate
                     {
-                        if (Frame.CanGoBack)
+                        if (Frame.CanGoBack && (PrimaryButtonCommand?.CanExecute(PrimaryButtonCommandParameter) ?? true))
                             Frame.GoBack();
                     };
 
