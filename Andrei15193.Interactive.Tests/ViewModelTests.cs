@@ -41,6 +41,8 @@ namespace Andrei15193.Interactive.Tests
 
             new public Task TransitionToAsync(string state)
                 => base.TransitionToAsync(state);
+            new public Task EnqueueTransitionToAsync(string state)
+                => base.EnqueueTransitionToAsync(state);
 
             new public ICommand BindCommand(ICommand command, IEnumerable<string> states)
                 => base.BindCommand(command, states);
@@ -885,6 +887,185 @@ namespace Andrei15193.Interactive.Tests
             }
 
             Assert.IsTrue(isCanceled);
+        }
+
+        [TestMethod]
+        public async Task TestEnqueueTransitionToTransitionsToStateIfNotInAnActionState()
+        {
+            await ViewModel.TransitionToAsync(InitialState);
+
+            await ViewModel.EnqueueTransitionToAsync(DestinationState);
+
+            Assert.AreEqual(DestinationState, ViewModel.State, ignoreCase: false);
+        }
+
+        [TestMethod]
+        public async Task TestEnqueueTransitionToTransitionsToStateAfterItHasCompletedCurrentActionState()
+        {
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                    });
+                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
+                var transitionToFinalStateTask = ViewModel.EnqueueTransitionToAsync(FinalState);
+
+                completeActionStateEvent.Set();
+
+                await Task.WhenAll(transitionToActionStateTask, transitionToFinalStateTask);
+
+            }
+            Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+        }
+
+        [TestMethod]
+        public async Task TestEnqueueingTheSameStateTwiceWhileInAnActionStateWillTransitionOnlyOneAfterTheActionStateIsCompelted()
+        {
+            var stateTransitions = new List<string>();
+
+            ViewModel.PropertyChanged +=
+                (sender, e) =>
+                {
+                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        stateTransitions.Add(ViewModel.State);
+                };
+
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                    });
+                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
+                var transitionToFinalStateTask = Task.WhenAll(
+                    ViewModel.EnqueueTransitionToAsync(FinalState),
+                    ViewModel.EnqueueTransitionToAsync(FinalState));
+
+                completeActionStateEvent.Set();
+
+                await Task.WhenAll(transitionToActionStateTask, transitionToFinalStateTask);
+
+            }
+
+            Assert.IsTrue(
+                new[]
+                {
+                    ActionState,
+                    DestinationState,
+                    FinalState,
+                }.SequenceEqual(stateTransitions));
+        }
+
+        [TestMethod]
+        public async Task TestEnqueueTransitionToEnqueuesStateOnlyIfItIsNotFirstInQueue()
+        {
+            var stateTransitions = new List<string>();
+
+            ViewModel.PropertyChanged +=
+                (sender, e) =>
+                {
+                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        stateTransitions.Add(ViewModel.State);
+                };
+
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                    });
+                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
+                var transitionToFinalStateTask = Task.WhenAll(
+                    ViewModel.EnqueueTransitionToAsync(FinalState),
+                    ViewModel.EnqueueTransitionToAsync(FollowUpActionState),
+                    ViewModel.EnqueueTransitionToAsync(FinalState));
+
+                completeActionStateEvent.Set();
+
+                await Task.WhenAll(transitionToActionStateTask, transitionToFinalStateTask);
+
+            }
+
+            Assert.IsTrue(
+                new[]
+                {
+                    ActionState,
+                    DestinationState,
+                    FinalState,
+                    FollowUpActionState,
+                    FinalState
+                }.SequenceEqual(stateTransitions));
+        }
+
+        [TestMethod]
+        public async Task TestEnqueuingTransitionToReturnsTaskThatWillBeCompletedOnceTheTransitionToThatStateIsCompelted()
+        {
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                    });
+                ViewModel.CreateActionState(
+                    FollowUpActionState,
+                    context =>
+                    {
+                        context.NextState = FinalState;
+                    });
+                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
+                var transitionToFollowUpStateTask = ViewModel.EnqueueTransitionToAsync(FollowUpActionState);
+
+                Assert.IsFalse(transitionToFollowUpStateTask.IsCompleted);
+                completeActionStateEvent.Set();
+
+                await Task.WhenAll(transitionToActionStateTask, transitionToFollowUpStateTask);
+            }
+        }
+
+        [TestMethod]
+        public async Task TestTranstionToAsyncCompeltesBeforeAnyEnqueuedTransitions()
+        {
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                        completeActionStateEvent.Reset();
+                    });
+                ViewModel.CreateActionState(
+                    FollowUpActionState,
+                    async context =>
+                    {
+                        context.NextState = FinalState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                    });
+                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
+                var transitionToFollowUpStateTask = ViewModel.EnqueueTransitionToAsync(FollowUpActionState);
+
+                completeActionStateEvent.Set();
+                await transitionToActionStateTask;
+
+                Assert.IsFalse(transitionToFollowUpStateTask.IsCompleted);
+                completeActionStateEvent.Set();
+
+                await transitionToFollowUpStateTask;
+            }
         }
     }
 }

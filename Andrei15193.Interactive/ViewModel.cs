@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -180,31 +181,31 @@ namespace Andrei15193.Interactive
             {
                 var destinationState = _destinationState;
                 while (destinationState != null)
-                    await _viewModel
-                        .TransitionToAsync(destinationState)
-                        .ContinueWith(
-                            task =>
-                            {
-                                if (task.Status == TaskStatus.RanToCompletion)
-                                    destinationState = null;
-                                else
-                                {
-                                    if (_errorHandler == null)
-                                        throw new InvalidOperationException("Unhandled exception by user code.", task.Exception);
+                {
+                    var transitionTask = _viewModel.TransitionToAsync(destinationState);
+                    try
+                    {
+                        await transitionTask;
+                        destinationState = null;
+                    }
+                    catch
+                    {
+                        if (_errorHandler == null)
+                            throw new InvalidOperationException("Unhandled exception by user code.", transitionTask.Exception);
 
-                                    ErrorContext errorContext;
-                                    if (task.IsCanceled)
-                                        errorContext = new ErrorContext(_viewModel, _viewModel._state);
-                                    else
-                                        errorContext = new ErrorContext(_viewModel, _viewModel._state, task.Exception);
+                        ErrorContext errorContext;
+                        if (transitionTask.IsCanceled)
+                            errorContext = new ErrorContext(_viewModel, _viewModel._state);
+                        else
+                            errorContext = new ErrorContext(_viewModel, _viewModel._state, transitionTask.Exception);
 
-                                    _errorHandler(errorContext);
-                                    if (errorContext.NextState == null)
-                                        throw new InvalidOperationException("Cannot transition to 'null' state.");
+                        _errorHandler(errorContext);
+                        if (errorContext.NextState == null)
+                            throw new InvalidOperationException("Cannot transition to 'null' state.");
 
-                                    destinationState = errorContext.NextState;
-                                }
-                            });
+                        destinationState = errorContext.NextState;
+                    }
+                }
 
                 (parameter as ManualResetEventSlim)?.Set();
             }
@@ -215,9 +216,11 @@ namespace Andrei15193.Interactive
                 => BindTo(states.AsEnumerable());
         }
 
-        private string _state;
+        private string _state = null;
         private bool _isInActionState = false;
-        private readonly CancellationCommand _cancelCommand;
+        private string _lastEnqueuedState = null;
+        private Task _lastTransitionTask = Task.FromResult<object>(null);
+        private readonly CancellationCommand _cancelCommand = new CancellationCommand();
         private readonly IDictionary<string, ViewModelState> _states = new Dictionary<string, ViewModelState>(StateStringComparer);
 
         internal ViewModel(object dataContext)
@@ -226,7 +229,6 @@ namespace Andrei15193.Interactive
                 throw new ArgumentNullException(nameof(dataContext));
 
             DataContext = dataContext;
-            _cancelCommand = new CancellationCommand();
         }
 
         protected object DataContext
@@ -245,6 +247,7 @@ namespace Andrei15193.Interactive
             set
             {
                 _state = value;
+                Debug.WriteLine($"ViewModel.{nameof(State)} = {value}");
                 NotifyPropertyChanged(nameof(State));
             }
         }
@@ -271,44 +274,72 @@ namespace Andrei15193.Interactive
                 new ViewModelState(name, cancelableAsyncAction));
         }
 
-        protected async Task TransitionToAsync(string state)
+        protected Task TransitionToAsync(string state)
         {
             if (state == null)
                 throw new ArgumentNullException(nameof(state));
             if (_isInActionState)
                 throw new InvalidOperationException("Cannot transition to a different state while in an action state.");
 
-            var nextState = state;
-            try
-            {
-                _isInActionState = true;
-                using (var cancellationTokenSource = new CancellationTokenSource())
+            return _lastTransitionTask = new Func<Task>(
+                async delegate
                 {
-                    ViewModelState viewModelState;
-                    while (_states.TryGetValue(nextState, out viewModelState))
+                    var nextState = state;
+                    try
                     {
-                        var actionStateContext = new ActionStateContext(this, _state);
-                        State = nextState;
+                        _isInActionState = true;
+                        using (var cancellationTokenSource = new CancellationTokenSource())
+                        {
+                            ViewModelState viewModelState;
+                            while (_states.TryGetValue(nextState, out viewModelState))
+                            {
+                                var actionStateContext = new ActionStateContext(this, _state);
+                                State = nextState;
 
-                        if (viewModelState.IsCancellable)
-                            _cancelCommand.CancellationTokenSource = cancellationTokenSource;
-                        else
-                            _cancelCommand.CancellationTokenSource = null;
-                        await viewModelState.ExecuteAsync(actionStateContext, cancellationTokenSource.Token);
+                                if (viewModelState.IsCancellable)
+                                    _cancelCommand.CancellationTokenSource = cancellationTokenSource;
+                                else
+                                    _cancelCommand.CancellationTokenSource = null;
+                                await viewModelState.ExecuteAsync(actionStateContext, cancellationTokenSource.Token);
 
-                        if (actionStateContext.NextState == null)
-                            throw new InvalidOperationException("Cannot transition to 'null' state.");
-                        nextState = actionStateContext.NextState;
+                                if (actionStateContext.NextState == null)
+                                    throw new InvalidOperationException("Cannot transition to 'null' state.");
+                                nextState = actionStateContext.NextState;
+                            }
+                        }
                     }
-                }
-            }
-            finally
+                    finally
+                    {
+                        _cancelCommand.CancellationTokenSource = null;
+                        _isInActionState = false;
+                    }
+
+                    State = nextState;
+                }).Invoke();
+        }
+
+        protected Task EnqueueTransitionToAsync(string state)
+        {
+            if (state == null)
+                throw new ArgumentNullException(nameof(state));
+
+            if (_lastTransitionTask.IsCompleted)
             {
-                _cancelCommand.CancellationTokenSource = null;
-                _isInActionState = false;
+                _lastEnqueuedState = null;
+                _lastTransitionTask = TransitionToAsync(state);
+            }
+            else if (!StateStringComparer.Equals(_lastEnqueuedState, state))
+            {
+                _lastEnqueuedState = state;
+                _lastTransitionTask = new Func<Task>(
+                    async delegate
+                    {
+                        await _lastTransitionTask;
+                        await TransitionToAsync(state);
+                    }).Invoke();
             }
 
-            State = nextState;
+            return _lastTransitionTask;
         }
 
         protected ICommand BindCommand(ICommand command, IEnumerable<string> states)

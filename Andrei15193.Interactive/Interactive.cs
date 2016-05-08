@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -57,7 +58,7 @@ namespace Andrei15193.Interactive
             if (VisualStateManager.GoToState(control, viewModelState, GetUseTransitions(control)))
                 return true;
 
-            Debug.WriteLine($"Could not navigated to {viewModelState}. " + (debugMessage ?? string.Empty));
+            Debug.WriteLine($"Could not navigate to {viewModelState} [SynchronizationContext: {SynchronizationContext.Current?.ToString() ?? "<null>"}]. " + (debugMessage ?? string.Empty));
             return false;
         }
 
