@@ -53,6 +53,15 @@
                 Icon="Forward"
                 Label="State 2"
                 Command="{Binding GoToState2Command}" />
+            <CommandBar.SecondaryCommands>
+                <AppBarButton
+                    Label="Go to second page">
+                    <AppBarButton.Command>
+                        <i:NavigateCommand
+                            Page="Andrei15193.Interactive.Tests.WindowsPhone.SecondPage" />
+                    </AppBarButton.Command>
+                </AppBarButton>
+            </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
 </Page>

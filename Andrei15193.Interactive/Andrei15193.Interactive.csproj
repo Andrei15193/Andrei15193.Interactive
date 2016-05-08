@@ -43,7 +43,9 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentDialogPage.cs" />
     <Compile Include="Interactive.cs" />
+    <Compile Include="NavigateCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyChangedNotifier.cs" />
     <Compile Include="ViewModel.cs" />

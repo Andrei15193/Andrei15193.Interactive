@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Globalization;
+using Windows.Phone.UI.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
@@ -27,7 +28,6 @@ namespace Andrei15193.Interactive.Tests.WindowsPhone
             if (Debugger.IsAttached)
                 DebugSettings.EnableFrameRateCounter = true;
 #endif
-
             Frame rootFrame = Window.Current.Content as Frame;
 
             if (rootFrame == null)
@@ -56,6 +56,14 @@ namespace Andrei15193.Interactive.Tests.WindowsPhone
                     throw new Exception("Failed to create initial page");
                 }
             }
+
+            HardwareButtons.BackPressed +=
+                (sender, backPressedEventArgs) =>
+                {
+                    if (rootFrame.CanGoBack)
+                        rootFrame.GoBack();
+                    backPressedEventArgs.Handled = true;
+                };
 
             Window.Current.Activate();
         }
