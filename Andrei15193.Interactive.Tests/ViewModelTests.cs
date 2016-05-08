@@ -49,6 +49,8 @@ namespace Andrei15193.Interactive.Tests
 
             new public ICommand GetTransitionCommand(string destinationState)
                 => base.GetTransitionCommand(destinationState);
+            new public ICommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
+                => base.GetTransitionCommand(destinationState, errorHandler);
         }
 
         private sealed class BoundMockViewModel
@@ -189,7 +191,7 @@ namespace Andrei15193.Interactive.Tests
                     actionContext =>
                     {
                         invocationCount++;
-                        Assert.AreSame(ViewModel, actionContext.ViewMode);
+                        Assert.AreSame(ViewModel, actionContext.ViewModel);
                         actionContext.NextState = DestinationState;
 
                         return Task.Factory.StartNew(completeActionStateEvent.Wait);
@@ -742,6 +744,147 @@ namespace Andrei15193.Interactive.Tests
             }
 
             Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+        }
+
+        [TestMethod]
+        public async Task TestTransitioningToAFaultingStateWithTransitionCommandWillGoThroughTheErrorHandler()
+        {
+            using (var transitionCompletedEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    context =>
+                    {
+                        throw new Exception();
+                    });
+
+                var transitionCommand =
+                    ViewModel.GetTransitionCommand(
+                        ActionState,
+                        context =>
+                        {
+                            context.NextState = FinalState;
+                        });
+
+                transitionCommand.Execute(transitionCompletedEvent);
+
+                await Task.Factory.StartNew(transitionCompletedEvent.Wait);
+
+                Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+            }
+        }
+
+        [TestMethod]
+        public async Task TestTransitioningFromAFaultedStateToAnActionStateThroughTheErrorHandler()
+        {
+            var stateChanges = new List<string>();
+            ViewModel.PropertyChanged +=
+                (sender, e) =>
+                {
+                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        stateChanges.Add(ViewModel.State);
+                };
+            using (var transitionCompletedEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    context =>
+                    {
+                        throw new Exception();
+                    });
+                ViewModel.CreateActionState(
+                    FollowUpActionState,
+                    context =>
+                    {
+                        context.NextState = FinalState;
+                    });
+
+                var transitionCommand =
+                    ViewModel.GetTransitionCommand(
+                        ActionState,
+                        context =>
+                        {
+                            context.NextState = FollowUpActionState;
+                        });
+
+                transitionCommand.Execute(transitionCompletedEvent);
+
+                await Task.Factory.StartNew(transitionCompletedEvent.Wait);
+            }
+
+            Assert.IsTrue(
+                new[]
+                {
+                    ActionState,
+                    FollowUpActionState,
+                    FinalState
+                }.SequenceEqual(stateChanges));
+        }
+
+        [TestMethod]
+        public async Task TestExceptionThatIsThrownIsRetrievedThroughErrorContext()
+        {
+            var expectedException = new Exception();
+            Exception actualException = null;
+            using (var transitionCompletedEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    context =>
+                    {
+                        throw expectedException;
+                    });
+
+                var transitionCommand =
+                    ViewModel.GetTransitionCommand(
+                        ActionState,
+                        context =>
+                        {
+                            context.NextState = FinalState;
+                            actualException = context.Exception;
+                        });
+
+                transitionCommand.Execute(transitionCompletedEvent);
+
+                await Task.Factory.StartNew(transitionCompletedEvent.Wait);
+            }
+
+            Assert.AreSame(expectedException, actualException);
+        }
+
+        [TestMethod]
+        public async Task TestCancelingAnActionStateSetsIsCanceledAsTrueOnErrorContext()
+        {
+            var isCanceled = false;
+            using (var cancelCommandExecutedEvent = new ManualResetEventSlim(false))
+            using (var transitionCompletedEvent = new ManualResetEventSlim(false))
+            {
+                ViewModel.CreateActionState(
+                    ActionState,
+                    async (context, cancellationToken) =>
+                    {
+                        await Task.Factory.StartNew(cancelCommandExecutedEvent.Wait);
+                        cancellationToken.ThrowIfCancellationRequested();
+                    });
+
+                var transitionCommand =
+                    ViewModel.GetTransitionCommand(
+                        ActionState,
+                        context =>
+                        {
+                            context.NextState = FinalState;
+                            isCanceled = context.IsCanceled;
+                        });
+
+                transitionCommand.Execute(transitionCompletedEvent);
+
+                ViewModel.CancelCommand.Execute(null);
+                cancelCommandExecutedEvent.Set();
+
+                await Task.Factory.StartNew(transitionCompletedEvent.Wait);
+            }
+
+            Assert.IsTrue(isCanceled);
         }
     }
 }

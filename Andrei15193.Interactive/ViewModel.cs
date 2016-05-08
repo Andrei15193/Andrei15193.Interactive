@@ -12,22 +12,53 @@ namespace Andrei15193.Interactive
     {
         private static readonly IEqualityComparer<string> StateStringComparer = StringComparer.OrdinalIgnoreCase;
 
-        public sealed class ActionStateContext
+        public class ActionStateContext
         {
             internal ActionStateContext(ViewModel viewModel, string sourceState)
             {
                 if (viewModel == null)
                     throw new ArgumentNullException(nameof(viewModel));
 
-                ViewMode = viewModel;
+                ViewModel = viewModel;
                 PreviousState = sourceState;
             }
 
-            public ViewModel ViewMode { get; }
+            public ViewModel ViewModel { get; }
 
             public string PreviousState { get; }
 
             public string NextState { get; set; }
+        }
+
+        public class ErrorContext
+        {
+            internal ErrorContext(ViewModel viewModel, string faultedState)
+            {
+                ViewModel = viewModel;
+                FaultedState = faultedState;
+                IsCanceled = true;
+                AggregateException = null;
+            }
+            internal ErrorContext(ViewModel viewModel, string faultedState, AggregateException exception)
+            {
+                ViewModel = viewModel;
+                FaultedState = faultedState;
+                IsCanceled = false;
+                AggregateException = exception;
+            }
+
+            public ViewModel ViewModel { get; }
+
+            public string FaultedState { get; }
+
+            public string NextState { get; set; }
+
+            public bool IsCanceled { get; }
+
+            public Exception Exception
+                => AggregateException?.InnerException;
+
+            public AggregateException AggregateException { get; set; }
         }
 
         private sealed class ViewModelState
@@ -175,8 +206,9 @@ namespace Andrei15193.Interactive
         {
             private readonly ViewModel _viewModel;
             private readonly string _destinationState;
+            private readonly Action<ErrorContext> _errorHandler;
 
-            internal TransitionCommand(ViewModel viewModel, string destinationState)
+            internal TransitionCommand(ViewModel viewModel, string destinationState, Action<ErrorContext> errorHandler)
             {
                 if (viewModel == null)
                     throw new ArgumentNullException(nameof(viewModel));
@@ -185,6 +217,7 @@ namespace Andrei15193.Interactive
 
                 _viewModel = viewModel;
                 _destinationState = destinationState;
+                _errorHandler = errorHandler;
             }
 
             event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
@@ -193,7 +226,37 @@ namespace Andrei15193.Interactive
                 => true;
 
             public async void Execute(object parameter)
-                => await _viewModel.TransitionToAsync(_destinationState);
+            {
+                var destinationState = _destinationState;
+                while (destinationState != null)
+                    await _viewModel
+                        .TransitionToAsync(destinationState)
+                        .ContinueWith(
+                            task =>
+                            {
+                                if (task.Status == TaskStatus.RanToCompletion)
+                                    destinationState = null;
+                                else
+                                {
+                                    if (_errorHandler == null)
+                                        throw new InvalidOperationException("Unhandled exception by user code.", task.Exception);
+
+                                    ErrorContext errorContext;
+                                    if (task.IsCanceled)
+                                        errorContext = new ErrorContext(_viewModel, _viewModel._state);
+                                    else
+                                        errorContext = new ErrorContext(_viewModel, _viewModel._state, task.Exception);
+
+                                    _errorHandler(errorContext);
+                                    if (errorContext.NextState == null)
+                                        throw new InvalidOperationException("Cannot transition to 'null' state.");
+
+                                    destinationState = errorContext.NextState;
+                                }
+                            });
+
+                (parameter as ManualResetEventSlim)?.Set();
+            }
 
             public ICommand BindTo(IEnumerable<string> states)
                 => _viewModel.BindCommand(this, states);
@@ -318,7 +381,9 @@ namespace Andrei15193.Interactive
             => BindCommand(command, states.AsEnumerable());
 
         protected TransitionCommand GetTransitionCommand(string destinationState)
-            => new TransitionCommand(this, destinationState);
+            => GetTransitionCommand(destinationState, null);
+        protected TransitionCommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
+            => new TransitionCommand(this, destinationState, errorHandler);
     }
 
     public class ViewModel<TDataContext>
