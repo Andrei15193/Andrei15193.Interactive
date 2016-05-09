@@ -53,7 +53,7 @@
     <Compile Include="NavigateCommandTests.cs" />
     <Compile Include="PropertyChangedNotifierTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ViewModelTests.cs" />
+    <Compile Include="InteractiveViewModelTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Andrei15193.Interactive\Andrei15193.Interactive.csproj">

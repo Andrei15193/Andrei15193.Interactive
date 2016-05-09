@@ -11,7 +11,7 @@ namespace Andrei15193.Interactive
     {
         public static DependencyProperty ViewModelProperty { get; } =
             DependencyProperty.RegisterAttached("ViewModel",
-                typeof(ViewModel),
+                typeof(InteractiveViewModel),
                 typeof(Interactive),
                 new PropertyMetadata(null, ViewModelChanged));
 
@@ -20,50 +20,50 @@ namespace Andrei15193.Interactive
             var control = d as Control;
             if (control != null)
             {
-                var viewModel = e.OldValue as ViewModel;
-                if (viewModel != null)
+                var interactiveViewModel = e.OldValue as InteractiveViewModel;
+                if (interactiveViewModel != null)
                 {
-                    viewModel.PropertyChanged -= GetPropertyChangedEventHandler(control, viewModel);
+                    interactiveViewModel.PropertyChanged -= GetPropertyChangedEventHandler(control, interactiveViewModel);
                     control.Loaded -=
                         delegate
                         {
-                            GoToCurrentState(control, viewModel);
+                            GoToCurrentState(control, interactiveViewModel);
                         };
                 }
 
-                viewModel = e.NewValue as ViewModel;
-                if (viewModel != null)
+                interactiveViewModel = e.NewValue as InteractiveViewModel;
+                if (interactiveViewModel != null)
                 {
-                    viewModel.PropertyChanged += GetPropertyChangedEventHandler(control, viewModel);
+                    interactiveViewModel.PropertyChanged += GetPropertyChangedEventHandler(control, interactiveViewModel);
                     control.Loaded +=
                         delegate
                         {
                             Debug.WriteLine("Control loaded.");
-                            GoToCurrentState(control, viewModel);
+                            GoToCurrentState(control, interactiveViewModel);
                         };
-                    GoToCurrentState(control, viewModel);
+                    GoToCurrentState(control, interactiveViewModel);
                 }
             }
         }
 
-        private static PropertyChangedEventHandler GetPropertyChangedEventHandler(Control control, ViewModel viewModel)
+        private static PropertyChangedEventHandler GetPropertyChangedEventHandler(Control control, InteractiveViewModel interactiveViewModel)
             => (sender, e) =>
             {
-                if (nameof(viewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                    GoToCurrentState(control, viewModel);
+                if (nameof(interactiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                    GoToCurrentState(control, interactiveViewModel);
             };
 
-        private static void GoToCurrentState(Control control, ViewModel viewModel)
+        private static void GoToCurrentState(Control control, InteractiveViewModel interactiveViewModel)
         {
-            var viewModelState = viewModel.State;
+            var viewModelState = interactiveViewModel.State;
             if (!VisualStateManager.GoToState(control, viewModelState, GetUseTransitions(control)))
                 Debug.WriteLine($"Could not navigate to {viewModelState} state [SynchronizationContext: {SynchronizationContext.Current?.ToString() ?? "<null>"}].");
         }
 
-        public static ViewModel GetViewModel(DependencyObject dependencyObject)
-            => (ViewModel)dependencyObject.GetValue(ViewModelProperty);
-        public static void SetViewModel(DependencyObject dependencyObject, ViewModel viewModel)
-            => dependencyObject.SetValue(ViewModelProperty, viewModel);
+        public static InteractiveViewModel GetViewModel(DependencyObject dependencyObject)
+            => (InteractiveViewModel)dependencyObject.GetValue(ViewModelProperty);
+        public static void SetViewModel(DependencyObject dependencyObject, InteractiveViewModel interactiveViewModel)
+            => dependencyObject.SetValue(ViewModelProperty, interactiveViewModel);
 
         public static DependencyProperty UseTransitionsProperty { get; } =
             DependencyProperty.RegisterAttached("UseTransitions",

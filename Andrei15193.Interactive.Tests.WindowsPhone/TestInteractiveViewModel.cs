@@ -2,10 +2,10 @@
 
 namespace Andrei15193.Interactive.Tests.WindowsPhone
 {
-    public class TestViewModel
-        : ViewModel<object>
+    public class TestInteractiveViewModel
+        : InteractiveViewModel<object>
     {
-        public TestViewModel()
+        public TestInteractiveViewModel()
             : base(new object())
         {
             GoToState1Command = GetTransitionCommand("State1");

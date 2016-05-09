@@ -4,16 +4,16 @@ namespace Andrei15193.Interactive
 {
     public class ActionStateContext
     {
-        internal ActionStateContext(ViewModel viewModel, string sourceState)
+        internal ActionStateContext(InteractiveViewModel interactiveViewModel, string sourceState)
         {
-            if (viewModel == null)
-                throw new ArgumentNullException(nameof(viewModel));
+            if (interactiveViewModel == null)
+                throw new ArgumentNullException(nameof(interactiveViewModel));
 
-            ViewModel = viewModel;
+            InteractiveViewModel = interactiveViewModel;
             PreviousState = sourceState;
         }
 
-        public ViewModel ViewModel { get; }
+        public InteractiveViewModel InteractiveViewModel { get; }
 
         public string PreviousState { get; }
 

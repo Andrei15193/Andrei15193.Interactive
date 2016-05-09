@@ -12,7 +12,7 @@
             Color="White" />
     </Page.Resources>
     <Page.DataContext>
-        <local:TestViewModel />
+        <local:TestInteractiveViewModel />
     </Page.DataContext>
     <Grid>
         <VisualStateManager.VisualStateGroups>

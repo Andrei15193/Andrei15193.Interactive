@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Andrei15193.Interactive.Tests
 {
     [TestClass]
-    public class ViewModelTests
+    public class InteractiveViewModelTests
     {
         private const string InitialState = "initialTestState";
         private const string ActionState = "actionTestState";
@@ -18,10 +18,10 @@ namespace Andrei15193.Interactive.Tests
         private const string DestinationState = "destinationTestState";
         private const string FinalState = "finalTestState";
 
-        private sealed class MockViewModel<TDataModel>
-            : ViewModel<TDataModel>
+        private sealed class MockInteractiveViewModel<TDataModel>
+            : InteractiveViewModel<TDataModel>
         {
-            public MockViewModel(TDataModel dataContext)
+            public MockInteractiveViewModel(TDataModel dataContext)
                 : base(dataContext)
             {
             }
@@ -55,10 +55,10 @@ namespace Andrei15193.Interactive.Tests
                 => base.GetTransitionCommand(destinationState, errorHandler);
         }
 
-        private sealed class BoundMockViewModel
-            : ViewModel<object>
+        private sealed class BoundMockInteractiveViewModel
+            : InteractiveViewModel<object>
         {
-            public BoundMockViewModel()
+            public BoundMockInteractiveViewModel()
                 : base(new object())
             {
                 GoToActionStateCommand = GetTransitionCommand(ActionState)
@@ -98,55 +98,55 @@ namespace Andrei15193.Interactive.Tests
         }
 
         private object DataContext { get; set; }
-        private MockViewModel<object> ViewModel { get; set; }
+        private MockInteractiveViewModel<object> InteractiveViewModel { get; set; }
 
         [TestInitialize]
         public void TestInitialize()
         {
             DataContext = new object();
-            ViewModel = new MockViewModel<object>(DataContext);
+            InteractiveViewModel = new MockInteractiveViewModel<object>(DataContext);
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
-            ViewModel = null;
+            InteractiveViewModel = null;
             DataContext = null;
         }
 
         [TestMethod]
         public void TestContextGetsSetThroughConstructor()
         {
-            Assert.AreSame(DataContext, ViewModel.DataContext);
+            Assert.AreSame(DataContext, InteractiveViewModel.DataContext);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void TestContextCannotBeNull()
         {
-            new ViewModel<object>(null);
+            new InteractiveViewModel<object>(null);
         }
 
         [TestMethod]
         public async Task TestTransitioningToAStateUpdatesTheStateProperty()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            Assert.AreEqual(InitialState, ViewModel.State, ignoreCase: false);
+            Assert.AreEqual(InitialState, InteractiveViewModel.State, ignoreCase: false);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task TestCannotTransitionToNullState()
         {
-            await ViewModel.TransitionToAsync(null);
+            await InteractiveViewModel.TransitionToAsync(null);
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public void TestCannotRetrieveStateIfItHasNotBeenSet()
         {
-            var state = ViewModel.State;
+            var state = InteractiveViewModel.State;
         }
 
         [TestMethod]
@@ -156,9 +156,9 @@ namespace Andrei15193.Interactive.Tests
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                await ViewModel.TransitionToAsync(InitialState);
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
                     {
@@ -167,13 +167,13 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
 
-                var actionStateTransitionTask = ViewModel.TransitionToAsync(ActionState);
-                Assert.AreEqual(ActionState, ViewModel.State, ignoreCase: false);
+                var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                Assert.AreEqual(ActionState, InteractiveViewModel.State, ignoreCase: false);
 
                 completeActionStateEvent.Set();
                 await actionStateTransitionTask;
 
-                Assert.AreEqual(DestinationState, ViewModel.State, ignoreCase: false);
+                Assert.AreEqual(DestinationState, InteractiveViewModel.State, ignoreCase: false);
             }
 
             Assert.AreEqual(1, invocationCount);
@@ -186,20 +186,20 @@ namespace Andrei15193.Interactive.Tests
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                await ViewModel.TransitionToAsync(InitialState);
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
                     {
                         invocationCount++;
-                        Assert.AreSame(ViewModel, actionContext.ViewModel);
+                        Assert.AreSame(InteractiveViewModel, actionContext.InteractiveViewModel);
                         actionContext.NextState = DestinationState;
 
                         return Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
 
-                var actionStateTransitionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 completeActionStateEvent.Set();
 
                 await actionStateTransitionTask;
@@ -215,9 +215,9 @@ namespace Andrei15193.Interactive.Tests
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                await ViewModel.TransitionToAsync(InitialState);
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
                     {
@@ -228,7 +228,7 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
 
-                var actionStateTransitionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 completeActionStateEvent.Set();
 
                 await actionStateTransitionTask;
@@ -241,26 +241,26 @@ namespace Andrei15193.Interactive.Tests
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task TestNotSettingADestinationStateThrowsException()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            ViewModel.CreateActionState(
+            InteractiveViewModel.CreateActionState(
                 ActionState,
                 actionContext =>
                 {
                 });
 
-            await ViewModel.TransitionToAsync(ActionState);
+            await InteractiveViewModel.TransitionToAsync(ActionState);
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task CannotTransitionToAnotherStateWhileInAnActionState()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var exceptionThrownEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
                     {
@@ -268,10 +268,10 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(exceptionThrownEvent.Wait);
                     });
 
-                var actionStateTransitionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 try
                 {
-                    await ViewModel.TransitionToAsync(DestinationState);
+                    await InteractiveViewModel.TransitionToAsync(DestinationState);
                 }
                 finally
                 {
@@ -286,11 +286,11 @@ namespace Andrei15193.Interactive.Tests
         public async Task TestCannotTransitionThroughPropertyChangedEventHandlerWhileInActionState()
         {
             var raiseCount = 0;
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var exceptionThrownEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
                     {
@@ -302,20 +302,20 @@ namespace Andrei15193.Interactive.Tests
                 eventHandler =
                     (sender, e) =>
                     {
-                        ViewModel.PropertyChanged -= eventHandler;
+                        InteractiveViewModel.PropertyChanged -= eventHandler;
                         raiseCount++;
                         try
                         {
-                            Task.Run(() => ViewModel.TransitionToAsync(DestinationState)).Wait();
+                            Task.Run(() => InteractiveViewModel.TransitionToAsync(DestinationState)).Wait();
                         }
                         catch (AggregateException aggregateException)
                         {
                             throw aggregateException.InnerException;
                         }
                     };
-                ViewModel.PropertyChanged += eventHandler;
+                InteractiveViewModel.PropertyChanged += eventHandler;
 
-                await ViewModel.TransitionToAsync(ActionState);
+                await InteractiveViewModel.TransitionToAsync(ActionState);
             }
 
             Assert.AreEqual(1, raiseCount);
@@ -325,11 +325,11 @@ namespace Andrei15193.Interactive.Tests
         public async Task TestTransitionFromPropertyChangedEventHandlerAfterActionStateCompleted()
         {
             var raiseCount = 0;
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var exceptionThrownEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
                     {
@@ -342,19 +342,19 @@ namespace Andrei15193.Interactive.Tests
                     (sender, e) =>
                     {
                         raiseCount++;
-                        ViewModel.PropertyChanged -= eventHandler;
-                        Task.Run(() => ViewModel.TransitionToAsync(FinalState)).Wait();
+                        InteractiveViewModel.PropertyChanged -= eventHandler;
+                        Task.Run(() => InteractiveViewModel.TransitionToAsync(FinalState)).Wait();
                     };
 
-                var actionStateTransitionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
-                ViewModel.PropertyChanged += eventHandler;
+                InteractiveViewModel.PropertyChanged += eventHandler;
 
                 exceptionThrownEvent.Set();
                 await actionStateTransitionTask;
             }
 
-            Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+            Assert.AreEqual(FinalState, InteractiveViewModel.State, ignoreCase: false);
             Assert.AreEqual(1, raiseCount);
         }
 
@@ -362,29 +362,29 @@ namespace Andrei15193.Interactive.Tests
         public async Task TestChainingActionStates()
         {
             var stateChanges = new List<string>();
-            ViewModel.PropertyChanged +=
+            InteractiveViewModel.PropertyChanged +=
                 (sender, e) =>
                 {
-                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                        stateChanges.Add(ViewModel.State);
+                    if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        stateChanges.Add(InteractiveViewModel.State);
                 };
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            ViewModel.CreateActionState(
+            InteractiveViewModel.CreateActionState(
                 ActionState,
                 context =>
                 {
                     context.NextState = FollowUpActionState;
                 });
 
-            ViewModel.CreateActionState(
+            InteractiveViewModel.CreateActionState(
                 FollowUpActionState,
                 context =>
                 {
                     context.NextState = DestinationState;
                 });
 
-            await ViewModel.TransitionToAsync(ActionState);
+            await InteractiveViewModel.TransitionToAsync(ActionState);
 
             Assert.IsTrue(
                 new[]
@@ -400,16 +400,16 @@ namespace Andrei15193.Interactive.Tests
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task TestCannotTransitionIntoADifferentStateFromTheMiddleOfAChainOfActionStats()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            ViewModel.PropertyChanged +=
+            InteractiveViewModel.PropertyChanged +=
                 (sender, e) =>
                 {
-                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                        if (FollowUpActionState.Equals(ViewModel.State, StringComparison.Ordinal))
+                    if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        if (FollowUpActionState.Equals(InteractiveViewModel.State, StringComparison.Ordinal))
                             try
                             {
-                                Task.Run(() => ViewModel.TransitionToAsync(DestinationState)).Wait();
+                                Task.Run(() => InteractiveViewModel.TransitionToAsync(DestinationState)).Wait();
                             }
                             catch (AggregateException aggregateException)
                             {
@@ -419,14 +419,14 @@ namespace Andrei15193.Interactive.Tests
 
             using (var continueFollowUpActionEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     context =>
                     {
                         context.NextState = FollowUpActionState;
                     });
 
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     FollowUpActionState,
                     context =>
                     {
@@ -434,16 +434,16 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(continueFollowUpActionEvent.Wait);
                     });
 
-                await ViewModel.TransitionToAsync(ActionState);
+                await InteractiveViewModel.TransitionToAsync(ActionState);
             }
         }
 
         [TestMethod]
         public async Task TestCancelableActionStatesReceiveACancelableCancellationToken()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            ViewModel.CreateActionState(
+            InteractiveViewModel.CreateActionState(
                 ActionState,
                 (context, cancellationToken) =>
                 {
@@ -452,17 +452,17 @@ namespace Andrei15193.Interactive.Tests
                     return Task.FromResult<object>(null);
                 });
 
-            await ViewModel.TransitionToAsync(ActionState);
+            await InteractiveViewModel.TransitionToAsync(ActionState);
         }
 
         [TestMethod]
         public async Task TestWhileInACancelableActionStateTheCancelCommandCanBeExecuted()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     (context, cancellationToken) =>
                     {
@@ -470,25 +470,25 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
 
-                var actionStateTranstionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
-                Assert.IsTrue(ViewModel.CancelCommand.CanExecute(null));
+                Assert.IsTrue(InteractiveViewModel.CancelCommand.CanExecute(null));
 
                 completeActionEvent.Set();
                 await actionStateTranstionTask;
             }
 
-            Assert.IsFalse(ViewModel.CancelCommand.CanExecute(null));
+            Assert.IsFalse(InteractiveViewModel.CancelCommand.CanExecute(null));
         }
 
         [TestMethod]
         public async Task TestWhileInAnActionStateThatCannotBeCanceledTheCancelComamndCannotBeExecuted()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     context =>
                     {
@@ -496,34 +496,34 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
 
-                var actionStateTranstionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
-                Assert.IsFalse(ViewModel.CancelCommand.CanExecute(null));
+                Assert.IsFalse(InteractiveViewModel.CancelCommand.CanExecute(null));
 
                 completeActionEvent.Set();
                 await actionStateTranstionTask;
             }
 
-            Assert.IsFalse(ViewModel.CancelCommand.CanExecute(null));
+            Assert.IsFalse(InteractiveViewModel.CancelCommand.CanExecute(null));
         }
 
         [TestMethod]
         public async Task TestChainedCancelableAndNonCancelableActionStatesEnableAndDisableCancelCommand()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var transitionedToFollowUpStateEvent = new ManualResetEventSlim(false))
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.PropertyChanged +=
+                InteractiveViewModel.PropertyChanged +=
                     (sender, e) =>
                     {
-                        if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                            if (FollowUpActionState.Equals(ViewModel.State, StringComparison.Ordinal))
+                        if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                            if (FollowUpActionState.Equals(InteractiveViewModel.State, StringComparison.Ordinal))
                                 transitionedToFollowUpStateEvent.Set();
                     };
 
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     (context, cancellationToken) =>
                     {
@@ -532,7 +532,7 @@ namespace Andrei15193.Interactive.Tests
                             .StartNew(completeActionEvent.Wait)
                             .ContinueWith(task => completeActionEvent.Reset());
                     });
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     FollowUpActionState,
                     context =>
                     {
@@ -540,33 +540,33 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
 
-                var actionStateTranstionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
-                Assert.IsTrue(ViewModel.CancelCommand.CanExecute(null));
+                Assert.IsTrue(InteractiveViewModel.CancelCommand.CanExecute(null));
                 completeActionEvent.Set();
 
                 transitionedToFollowUpStateEvent.Wait();
 
-                Assert.IsFalse(ViewModel.CancelCommand.CanExecute(null));
+                Assert.IsFalse(InteractiveViewModel.CancelCommand.CanExecute(null));
                 completeActionEvent.Set();
 
                 await actionStateTranstionTask;
             }
 
-            Assert.IsFalse(ViewModel.CancelCommand.CanExecute(null));
+            Assert.IsFalse(InteractiveViewModel.CancelCommand.CanExecute(null));
         }
 
         [TestMethod]
         public async Task TestCanExecuteIsRaisedWhenCancelCommandBecomesAvailableOrUnavailable()
         {
             var raiseCount = 0;
-            ViewModel.CancelCommand.CanExecuteChanged += delegate { raiseCount++; };
+            InteractiveViewModel.CancelCommand.CanExecuteChanged += delegate { raiseCount++; };
 
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     (context, cancellationToken) =>
                     {
@@ -574,7 +574,7 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
 
-                var actionStateTranstionTask = ViewModel.TransitionToAsync(ActionState);
+                var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
                 Assert.AreEqual(1, raiseCount);
 
@@ -589,20 +589,20 @@ namespace Andrei15193.Interactive.Tests
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task TestTryingToExecuteCancelCommandWhenItIsUnavailableThrowsException()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            Assert.IsFalse(ViewModel.CancelCommand.CanExecute(null));
-            ViewModel.CancelCommand.Execute(null);
+            Assert.IsFalse(InteractiveViewModel.CancelCommand.CanExecute(null));
+            InteractiveViewModel.CancelCommand.Execute(null);
         }
 
         [TestMethod]
         public async Task TestExecutingTheCancelCommandSignalsTheCancellationToken()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var cancelSignledEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     async (context, cancellationToken) =>
                     {
@@ -611,8 +611,8 @@ namespace Andrei15193.Interactive.Tests
                         Assert.IsTrue(cancellationToken.IsCancellationRequested);
                     });
 
-                var actionStateTranstitionTask = ViewModel.TransitionToAsync(ActionState);
-                ViewModel.CancelCommand.Execute(null);
+                var actionStateTranstitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                InteractiveViewModel.CancelCommand.Execute(null);
 
                 cancelSignledEvent.Set();
                 await actionStateTranstitionTask;
@@ -622,12 +622,12 @@ namespace Andrei15193.Interactive.Tests
         [TestMethod]
         public async Task TestBindingACommandMakesItAvailableInTheSelectedStates()
         {
-            var boundCommand = ViewModel.BindCommand(new MockCommand(), ActionState);
+            var boundCommand = InteractiveViewModel.BindCommand(new MockCommand(), ActionState);
 
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
             Assert.IsFalse(boundCommand.CanExecute(null));
 
-            await ViewModel.TransitionToAsync(ActionState);
+            await InteractiveViewModel.TransitionToAsync(ActionState);
             Assert.IsTrue(boundCommand.CanExecute(null));
         }
 
@@ -635,23 +635,23 @@ namespace Andrei15193.Interactive.Tests
         public async Task TestCanExecuteChangedIsRaisedWhenTheViewModelMovesInAndOutOfBoundCommands()
         {
             var raiseCount = 0;
-            var boundCommand = ViewModel.BindCommand(new MockCommand(), ActionState, DestinationState);
+            var boundCommand = InteractiveViewModel.BindCommand(new MockCommand(), ActionState, DestinationState);
             boundCommand.CanExecuteChanged +=
                 (sender, e) => raiseCount++;
 
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
             Assert.IsFalse(boundCommand.CanExecute(null));
             Assert.AreEqual(0, raiseCount);
 
-            await ViewModel.TransitionToAsync(ActionState);
+            await InteractiveViewModel.TransitionToAsync(ActionState);
             Assert.IsTrue(boundCommand.CanExecute(null));
             Assert.AreEqual(1, raiseCount);
 
-            await ViewModel.TransitionToAsync(DestinationState);
+            await InteractiveViewModel.TransitionToAsync(DestinationState);
             Assert.IsTrue(boundCommand.CanExecute(null));
             Assert.AreEqual(1, raiseCount);
 
-            await ViewModel.TransitionToAsync(FinalState);
+            await InteractiveViewModel.TransitionToAsync(FinalState);
             Assert.IsFalse(boundCommand.CanExecute(null));
             Assert.AreEqual(2, raiseCount);
         }
@@ -660,69 +660,69 @@ namespace Andrei15193.Interactive.Tests
         [ExpectedException(typeof(ArgumentNullException))]
         public void TestCannotBindNullComamnd()
         {
-            ViewModel.BindCommand(null);
+            InteractiveViewModel.BindCommand(null);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void TestCannotBindNullStatesCollection()
         {
-            ViewModel.BindCommand(new MockCommand(), null);
+            InteractiveViewModel.BindCommand(new MockCommand(), null);
         }
 
         [TestMethod]
         public async Task TestExecutingTransitionCommandTranstionsTheViewModelInTheTargetedState()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            var transitionCommand = ViewModel.GetTransitionCommand(DestinationState);
+            var transitionCommand = InteractiveViewModel.GetTransitionCommand(DestinationState);
 
             using (var stateChangedEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.PropertyChanged +=
+                InteractiveViewModel.PropertyChanged +=
                     (sender, e) =>
                     {
-                        if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
                             stateChangedEvent.Set();
                     };
 
                 transitionCommand.Execute(null);
                 stateChangedEvent.Wait();
 
-                Assert.AreEqual(DestinationState, ViewModel.State);
+                Assert.AreEqual(DestinationState, InteractiveViewModel.State);
             }
         }
 
         [TestMethod]
         public void TestBoundTransitionCommandIsAvailableOnlyInStatesToWhichItHasBeenBound()
         {
-            var viewModel = new BoundMockViewModel();
+            var interactiveViewModel = new BoundMockInteractiveViewModel();
 
-            Assert.IsTrue(viewModel.GoToActionStateCommand.CanExecute(false));
-            Assert.IsFalse(viewModel.GoToDestinationStateCommand.CanExecute(false));
+            Assert.IsTrue(interactiveViewModel.GoToActionStateCommand.CanExecute(false));
+            Assert.IsFalse(interactiveViewModel.GoToDestinationStateCommand.CanExecute(false));
 
             using (var stateChangedEvent = new ManualResetEventSlim(false))
             {
-                viewModel.PropertyChanged +=
+                interactiveViewModel.PropertyChanged +=
                     (sender, e) =>
                     {
-                        if (nameof(viewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        if (nameof(interactiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
                             stateChangedEvent.Set();
                     };
 
-                viewModel.GoToActionStateCommand.Execute(null);
+                interactiveViewModel.GoToActionStateCommand.Execute(null);
                 stateChangedEvent.Wait();
                 stateChangedEvent.Reset();
 
-                Assert.IsFalse(viewModel.GoToActionStateCommand.CanExecute(false));
-                Assert.IsTrue(viewModel.GoToDestinationStateCommand.CanExecute(false));
+                Assert.IsFalse(interactiveViewModel.GoToActionStateCommand.CanExecute(false));
+                Assert.IsTrue(interactiveViewModel.GoToDestinationStateCommand.CanExecute(false));
 
-                viewModel.GoToDestinationStateCommand.Execute(null);
+                interactiveViewModel.GoToDestinationStateCommand.Execute(null);
                 stateChangedEvent.Wait();
             }
 
-            Assert.IsFalse(viewModel.GoToActionStateCommand.CanExecute(false));
-            Assert.IsFalse(viewModel.GoToDestinationStateCommand.CanExecute(false));
+            Assert.IsFalse(interactiveViewModel.GoToActionStateCommand.CanExecute(false));
+            Assert.IsFalse(interactiveViewModel.GoToDestinationStateCommand.CanExecute(false));
         }
 
         [TestMethod]
@@ -730,7 +730,7 @@ namespace Andrei15193.Interactive.Tests
         {
             using (var continueEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     InitialState,
                     context =>
                     {
@@ -738,14 +738,14 @@ namespace Andrei15193.Interactive.Tests
                         return Task.Factory.StartNew(continueEvent.Wait);
                     });
 
-                var initialStateTransitionTask = ViewModel.TransitionToAsync(InitialState);
-                Assert.AreEqual(InitialState, ViewModel.State, ignoreCase: false);
+                var initialStateTransitionTask = InteractiveViewModel.TransitionToAsync(InitialState);
+                Assert.AreEqual(InitialState, InteractiveViewModel.State, ignoreCase: false);
 
                 continueEvent.Set();
                 await initialStateTransitionTask;
             }
 
-            Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+            Assert.AreEqual(FinalState, InteractiveViewModel.State, ignoreCase: false);
         }
 
         [TestMethod]
@@ -753,7 +753,7 @@ namespace Andrei15193.Interactive.Tests
         {
             using (var transitionCompletedEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     context =>
                     {
@@ -761,7 +761,7 @@ namespace Andrei15193.Interactive.Tests
                     });
 
                 var transitionCommand =
-                    ViewModel.GetTransitionCommand(
+                    InteractiveViewModel.GetTransitionCommand(
                         ActionState,
                         context =>
                         {
@@ -772,7 +772,7 @@ namespace Andrei15193.Interactive.Tests
 
                 await Task.Factory.StartNew(transitionCompletedEvent.Wait);
 
-                Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+                Assert.AreEqual(FinalState, InteractiveViewModel.State, ignoreCase: false);
             }
         }
 
@@ -780,21 +780,21 @@ namespace Andrei15193.Interactive.Tests
         public async Task TestTransitioningFromAFaultedStateToAnActionStateThroughTheErrorHandler()
         {
             var stateChanges = new List<string>();
-            ViewModel.PropertyChanged +=
+            InteractiveViewModel.PropertyChanged +=
                 (sender, e) =>
                 {
-                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                        stateChanges.Add(ViewModel.State);
+                    if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        stateChanges.Add(InteractiveViewModel.State);
                 };
             using (var transitionCompletedEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     context =>
                     {
                         throw new Exception();
                     });
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     FollowUpActionState,
                     context =>
                     {
@@ -802,7 +802,7 @@ namespace Andrei15193.Interactive.Tests
                     });
 
                 var transitionCommand =
-                    ViewModel.GetTransitionCommand(
+                    InteractiveViewModel.GetTransitionCommand(
                         ActionState,
                         context =>
                         {
@@ -830,7 +830,7 @@ namespace Andrei15193.Interactive.Tests
             Exception actualException = null;
             using (var transitionCompletedEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     context =>
                     {
@@ -838,7 +838,7 @@ namespace Andrei15193.Interactive.Tests
                     });
 
                 var transitionCommand =
-                    ViewModel.GetTransitionCommand(
+                    InteractiveViewModel.GetTransitionCommand(
                         ActionState,
                         context =>
                         {
@@ -861,7 +861,7 @@ namespace Andrei15193.Interactive.Tests
             using (var cancelCommandExecutedEvent = new ManualResetEventSlim(false))
             using (var transitionCompletedEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     async (context, cancellationToken) =>
                     {
@@ -870,7 +870,7 @@ namespace Andrei15193.Interactive.Tests
                     });
 
                 var transitionCommand =
-                    ViewModel.GetTransitionCommand(
+                    InteractiveViewModel.GetTransitionCommand(
                         ActionState,
                         context =>
                         {
@@ -880,7 +880,7 @@ namespace Andrei15193.Interactive.Tests
 
                 transitionCommand.Execute(transitionCompletedEvent);
 
-                ViewModel.CancelCommand.Execute(null);
+                InteractiveViewModel.CancelCommand.Execute(null);
                 cancelCommandExecutedEvent.Set();
 
                 await Task.Factory.StartNew(transitionCompletedEvent.Wait);
@@ -892,11 +892,11 @@ namespace Andrei15193.Interactive.Tests
         [TestMethod]
         public async Task TestEnqueueTransitionToTransitionsToStateIfNotInAnActionState()
         {
-            await ViewModel.TransitionToAsync(InitialState);
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            await ViewModel.EnqueueTransitionToAsync(DestinationState);
+            await InteractiveViewModel.EnqueueTransitionToAsync(DestinationState);
 
-            Assert.AreEqual(DestinationState, ViewModel.State, ignoreCase: false);
+            Assert.AreEqual(DestinationState, InteractiveViewModel.State, ignoreCase: false);
         }
 
         [TestMethod]
@@ -904,22 +904,22 @@ namespace Andrei15193.Interactive.Tests
         {
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     async context =>
                     {
                         context.NextState = DestinationState;
                         await Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
-                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
-                var transitionToFinalStateTask = ViewModel.EnqueueTransitionToAsync(FinalState);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                var transitionToFinalStateTask = InteractiveViewModel.EnqueueTransitionToAsync(FinalState);
 
                 completeActionStateEvent.Set();
 
                 await Task.WhenAll(transitionToActionStateTask, transitionToFinalStateTask);
 
             }
-            Assert.AreEqual(FinalState, ViewModel.State, ignoreCase: false);
+            Assert.AreEqual(FinalState, InteractiveViewModel.State, ignoreCase: false);
         }
 
         [TestMethod]
@@ -927,26 +927,26 @@ namespace Andrei15193.Interactive.Tests
         {
             var stateTransitions = new List<string>();
 
-            ViewModel.PropertyChanged +=
+            InteractiveViewModel.PropertyChanged +=
                 (sender, e) =>
                 {
-                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                        stateTransitions.Add(ViewModel.State);
+                    if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        stateTransitions.Add(InteractiveViewModel.State);
                 };
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     async context =>
                     {
                         context.NextState = DestinationState;
                         await Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
-                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 var transitionToFinalStateTask = Task.WhenAll(
-                    ViewModel.EnqueueTransitionToAsync(FinalState),
-                    ViewModel.EnqueueTransitionToAsync(FinalState));
+                    InteractiveViewModel.EnqueueTransitionToAsync(FinalState),
+                    InteractiveViewModel.EnqueueTransitionToAsync(FinalState));
 
                 completeActionStateEvent.Set();
 
@@ -968,27 +968,27 @@ namespace Andrei15193.Interactive.Tests
         {
             var stateTransitions = new List<string>();
 
-            ViewModel.PropertyChanged +=
+            InteractiveViewModel.PropertyChanged +=
                 (sender, e) =>
                 {
-                    if (nameof(ViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                        stateTransitions.Add(ViewModel.State);
+                    if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        stateTransitions.Add(InteractiveViewModel.State);
                 };
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     async context =>
                     {
                         context.NextState = DestinationState;
                         await Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
-                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 var transitionToFinalStateTask = Task.WhenAll(
-                    ViewModel.EnqueueTransitionToAsync(FinalState),
-                    ViewModel.EnqueueTransitionToAsync(FollowUpActionState),
-                    ViewModel.EnqueueTransitionToAsync(FinalState));
+                    InteractiveViewModel.EnqueueTransitionToAsync(FinalState),
+                    InteractiveViewModel.EnqueueTransitionToAsync(FollowUpActionState),
+                    InteractiveViewModel.EnqueueTransitionToAsync(FinalState));
 
                 completeActionStateEvent.Set();
 
@@ -1012,21 +1012,21 @@ namespace Andrei15193.Interactive.Tests
         {
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     async context =>
                     {
                         context.NextState = DestinationState;
                         await Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     FollowUpActionState,
                     context =>
                     {
                         context.NextState = FinalState;
                     });
-                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
-                var transitionToFollowUpStateTask = ViewModel.EnqueueTransitionToAsync(FollowUpActionState);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                var transitionToFollowUpStateTask = InteractiveViewModel.EnqueueTransitionToAsync(FollowUpActionState);
 
                 Assert.IsFalse(transitionToFollowUpStateTask.IsCompleted);
                 completeActionStateEvent.Set();
@@ -1040,7 +1040,7 @@ namespace Andrei15193.Interactive.Tests
         {
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     ActionState,
                     async context =>
                     {
@@ -1048,15 +1048,15 @@ namespace Andrei15193.Interactive.Tests
                         await Task.Factory.StartNew(completeActionStateEvent.Wait);
                         completeActionStateEvent.Reset();
                     });
-                ViewModel.CreateActionState(
+                InteractiveViewModel.CreateActionState(
                     FollowUpActionState,
                     async context =>
                     {
                         context.NextState = FinalState;
                         await Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
-                var transitionToActionStateTask = ViewModel.TransitionToAsync(ActionState);
-                var transitionToFollowUpStateTask = ViewModel.EnqueueTransitionToAsync(FollowUpActionState);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                var transitionToFollowUpStateTask = InteractiveViewModel.EnqueueTransitionToAsync(FollowUpActionState);
 
                 completeActionStateEvent.Set();
                 await transitionToActionStateTask;

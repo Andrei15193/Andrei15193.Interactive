@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace Andrei15193.Interactive
 {
-    public class ViewModel
+    public class InteractiveViewModel
         : PropertyChangedNotifier
     {
         private static readonly IEqualityComparer<string> StateStringComparer = StringComparer.OrdinalIgnoreCase;
@@ -111,24 +111,24 @@ namespace Andrei15193.Interactive
             : ICommand
         {
             private bool _isInBoundState;
-            private readonly ViewModel _viewModel;
+            private readonly InteractiveViewModel _viewModel;
             private readonly ICommand _command;
 
-            public BoundCommand(ViewModel viewModel, ICommand command)
+            public BoundCommand(InteractiveViewModel interactiveViewModel, ICommand command)
             {
-                if (viewModel == null)
-                    throw new ArgumentNullException(nameof(viewModel));
+                if (interactiveViewModel == null)
+                    throw new ArgumentNullException(nameof(interactiveViewModel));
                 if (command == null)
                     throw new ArgumentNullException(nameof(command));
 
                 _isInBoundState = false;
-                _viewModel = viewModel;
+                _viewModel = interactiveViewModel;
                 _command = command;
                 BoundStates = new HashSet<string>(StateStringComparer);
-                viewModel.PropertyChanged +=
+                interactiveViewModel.PropertyChanged +=
                     (sender, e) =>
                     {
-                        if (nameof(viewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase)
+                        if (nameof(interactiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase)
                             && BoundStates.Contains(_viewModel.State) != _isInBoundState)
                         {
                             _isInBoundState = !_isInBoundState;
@@ -156,18 +156,18 @@ namespace Andrei15193.Interactive
         protected sealed class TransitionCommand
             : ICommand
         {
-            private readonly ViewModel _viewModel;
+            private readonly InteractiveViewModel _interactiveViewModel;
             private readonly string _destinationState;
             private readonly Action<ErrorContext> _errorHandler;
 
-            internal TransitionCommand(ViewModel viewModel, string destinationState, Action<ErrorContext> errorHandler)
+            internal TransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState, Action<ErrorContext> errorHandler)
             {
-                if (viewModel == null)
-                    throw new ArgumentNullException(nameof(viewModel));
+                if (interactiveViewModel == null)
+                    throw new ArgumentNullException(nameof(interactiveViewModel));
                 if (destinationState == null)
                     throw new ArgumentNullException(nameof(destinationState));
 
-                _viewModel = viewModel;
+                _interactiveViewModel = interactiveViewModel;
                 _destinationState = destinationState;
                 _errorHandler = errorHandler;
             }
@@ -182,7 +182,7 @@ namespace Andrei15193.Interactive
                 var destinationState = _destinationState;
                 while (destinationState != null)
                 {
-                    var transitionTask = _viewModel.TransitionToAsync(destinationState);
+                    var transitionTask = _interactiveViewModel.TransitionToAsync(destinationState);
                     try
                     {
                         await transitionTask;
@@ -195,9 +195,9 @@ namespace Andrei15193.Interactive
 
                         ErrorContext errorContext;
                         if (transitionTask.IsCanceled)
-                            errorContext = new ErrorContext(_viewModel, _viewModel._state);
+                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state);
                         else
-                            errorContext = new ErrorContext(_viewModel, _viewModel._state, transitionTask.Exception);
+                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, transitionTask.Exception);
 
                         _errorHandler(errorContext);
                         if (errorContext.NextState == null)
@@ -211,7 +211,7 @@ namespace Andrei15193.Interactive
             }
 
             public ICommand BindTo(IEnumerable<string> states)
-                => _viewModel.BindCommand(this, states);
+                => _interactiveViewModel.BindCommand(this, states);
             public ICommand BindTo(params string[] states)
                 => BindTo(states.AsEnumerable());
         }
@@ -223,7 +223,7 @@ namespace Andrei15193.Interactive
         private readonly CancellationCommand _cancelCommand = new CancellationCommand();
         private readonly IDictionary<string, ViewModelState> _states = new Dictionary<string, ViewModelState>(StateStringComparer);
 
-        internal ViewModel(object dataContext)
+        internal InteractiveViewModel(object dataContext)
         {
             if (dataContext == null)
                 throw new ArgumentNullException(nameof(dataContext));
@@ -247,7 +247,7 @@ namespace Andrei15193.Interactive
             set
             {
                 _state = value;
-                Debug.WriteLine($"ViewModel.{nameof(State)} = {value}");
+                Debug.WriteLine($"InteractiveViewModel.{nameof(State)} = {value}");
                 NotifyPropertyChanged(nameof(State));
             }
         }
@@ -368,10 +368,10 @@ namespace Andrei15193.Interactive
             => new TransitionCommand(this, destinationState, errorHandler);
     }
 
-    public class ViewModel<TDataContext>
-        : ViewModel
+    public class InteractiveViewModel<TDataContext>
+        : InteractiveViewModel
     {
-        public ViewModel(TDataContext dataContext)
+        public InteractiveViewModel(TDataContext dataContext)
             : base(dataContext)
         {
             DataContext = dataContext;

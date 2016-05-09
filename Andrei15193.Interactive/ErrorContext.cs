@@ -4,22 +4,22 @@ namespace Andrei15193.Interactive
 {
     public class ErrorContext
     {
-        internal ErrorContext(ViewModel viewModel, string faultedState)
+        internal ErrorContext(InteractiveViewModel interactiveViewModel, string faultedState)
         {
-            ViewModel = viewModel;
+            InteractiveViewModel = interactiveViewModel;
             FaultedState = faultedState;
             IsCanceled = true;
             AggregateException = null;
         }
-        internal ErrorContext(ViewModel viewModel, string faultedState, AggregateException exception)
+        internal ErrorContext(InteractiveViewModel interactiveViewModel, string faultedState, AggregateException exception)
         {
-            ViewModel = viewModel;
+            InteractiveViewModel = interactiveViewModel;
             FaultedState = faultedState;
             IsCanceled = false;
             AggregateException = exception;
         }
 
-        public ViewModel ViewModel { get; }
+        public InteractiveViewModel InteractiveViewModel { get; }
 
         public string FaultedState { get; }
 
