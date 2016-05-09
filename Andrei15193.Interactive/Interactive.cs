@@ -27,7 +27,7 @@ namespace Andrei15193.Interactive
                     control.Loaded -=
                         delegate
                         {
-                            _TryGoToCurrentState(control, viewModel);
+                            GoToCurrentState(control, viewModel);
                         };
                 }
 
@@ -35,12 +35,13 @@ namespace Andrei15193.Interactive
                 if (viewModel != null)
                 {
                     viewModel.PropertyChanged += GetPropertyChangedEventHandler(control, viewModel);
-                    if (!_TryGoToCurrentState(control, viewModel, "Registering to Control.Loaded event."))
-                        control.Loaded +=
-                            delegate
-                            {
-                                _TryGoToCurrentState(control, viewModel);
-                            };
+                    control.Loaded +=
+                        delegate
+                        {
+                            Debug.WriteLine("Control loaded.");
+                            GoToCurrentState(control, viewModel);
+                        };
+                    GoToCurrentState(control, viewModel);
                 }
             }
         }
@@ -49,17 +50,14 @@ namespace Andrei15193.Interactive
             => (sender, e) =>
             {
                 if (nameof(viewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
-                    _TryGoToCurrentState(control, viewModel);
+                    GoToCurrentState(control, viewModel);
             };
 
-        private static bool _TryGoToCurrentState(Control control, ViewModel viewModel, string debugMessage = null)
+        private static void GoToCurrentState(Control control, ViewModel viewModel)
         {
             var viewModelState = viewModel.State;
-            if (VisualStateManager.GoToState(control, viewModelState, GetUseTransitions(control)))
-                return true;
-
-            Debug.WriteLine($"Could not navigate to {viewModelState} [SynchronizationContext: {SynchronizationContext.Current?.ToString() ?? "<null>"}]. " + (debugMessage ?? string.Empty));
-            return false;
+            if (!VisualStateManager.GoToState(control, viewModelState, GetUseTransitions(control)))
+                Debug.WriteLine($"Could not navigate to {viewModelState} state [SynchronizationContext: {SynchronizationContext.Current?.ToString() ?? "<null>"}].");
         }
 
         public static ViewModel GetViewModel(DependencyObject dependencyObject)
