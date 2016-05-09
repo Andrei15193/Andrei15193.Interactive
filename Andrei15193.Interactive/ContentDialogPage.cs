@@ -43,7 +43,29 @@ namespace Andrei15193.Interactive
         {
             var contentDialogPage = d as ContentDialogPage;
             if (contentDialogPage != null)
-                contentDialogPage.PrimaryButton.Command = e.NewValue as ICommand ?? PrimaryButtonCommandDefaultValue;
+            {
+                ICommand command = e.OldValue as ICommand;
+
+                if (command != null)
+                    command.CanExecuteChanged -=
+                        delegate
+                        {
+                            contentDialogPage.PrimaryButton.IsEnabled = contentDialogPage.PrimaryButtonCommand.CanExecute(contentDialogPage.PrimaryButtonCommandParameter);
+                        };
+
+                command = e.NewValue as ICommand;
+                if (command != null)
+                {
+                    command.CanExecuteChanged +=
+                        delegate
+                        {
+                            contentDialogPage.PrimaryButton.IsEnabled = contentDialogPage.PrimaryButtonCommand.CanExecute(contentDialogPage.PrimaryButtonCommandParameter);
+                        };
+                    contentDialogPage.PrimaryButton.Command = command;
+                }
+                else
+                    contentDialogPage.PrimaryButton.Command = PrimaryButtonCommandDefaultValue;
+            }
         }
         public ICommand PrimaryButtonCommand
         {
@@ -118,7 +140,29 @@ namespace Andrei15193.Interactive
         {
             var contentDialogPage = d as ContentDialogPage;
             if (contentDialogPage != null)
-                contentDialogPage.SecondaryButton.Command = e.NewValue as ICommand ?? SecondaryButtonCommandDefaultValue;
+            {
+                ICommand command = e.OldValue as ICommand;
+
+                if (command != null)
+                    command.CanExecuteChanged -=
+                        delegate
+                        {
+                            contentDialogPage.SecondaryButton.IsEnabled = contentDialogPage.SecondaryButtonCommand.CanExecute(contentDialogPage.SecondaryButtonCommandParameter);
+                        };
+
+                command = e.NewValue as ICommand;
+                if (command != null)
+                {
+                    command.CanExecuteChanged +=
+                        delegate
+                        {
+                            contentDialogPage.SecondaryButton.IsEnabled = contentDialogPage.SecondaryButtonCommand.CanExecute(contentDialogPage.SecondaryButtonCommandParameter);
+                        };
+                    contentDialogPage.SecondaryButton.Command = command;
+                }
+                else
+                    contentDialogPage.SecondaryButton.Command = SecondaryButtonCommandDefaultValue;
+            }
         }
         public ICommand SecondaryButtonCommand
         {
