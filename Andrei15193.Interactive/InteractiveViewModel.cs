@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -223,19 +224,6 @@ namespace Andrei15193.Interactive
         private readonly CancellationCommand _cancelCommand = new CancellationCommand();
         private readonly IDictionary<string, ViewModelState> _states = new Dictionary<string, ViewModelState>(StateStringComparer);
 
-        internal InteractiveViewModel(object dataContext)
-        {
-            if (dataContext == null)
-                throw new ArgumentNullException(nameof(dataContext));
-
-            DataContext = dataContext;
-        }
-
-        protected object DataContext
-        {
-            get;
-        }
-
         public string State
         {
             get
@@ -368,15 +356,20 @@ namespace Andrei15193.Interactive
             => new TransitionCommand(this, destinationState, errorHandler);
     }
 
-    public class InteractiveViewModel<TDataContext>
+    public class InteractiveViewModel<TDataModel>
         : InteractiveViewModel
     {
-        public InteractiveViewModel(TDataContext dataContext)
-            : base(dataContext)
+        public InteractiveViewModel(TDataModel dataModel)
         {
-            DataContext = dataContext;
+            DataModel = dataModel;
+            Errors = new ObservableCollection<ValidationError>();
+            Context = new ViewModelContext<TDataModel>(DataModel, new ReadOnlyObservableCollection<ValidationError>(Errors));
         }
 
-        new public TDataContext DataContext { get; }
+        public ViewModelContext<TDataModel> Context { get; }
+
+        protected TDataModel DataModel { get; }
+
+        protected ObservableCollection<ValidationError> Errors { get; }
     }
 }

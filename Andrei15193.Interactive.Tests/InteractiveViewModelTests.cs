@@ -21,8 +21,8 @@ namespace Andrei15193.Interactive.Tests
         private sealed class MockInteractiveViewModel<TDataModel>
             : InteractiveViewModel<TDataModel>
         {
-            public MockInteractiveViewModel(TDataModel dataContext)
-                : base(dataContext)
+            public MockInteractiveViewModel(TDataModel dataModel)
+                : base(dataModel)
             {
             }
 
@@ -97,27 +97,27 @@ namespace Andrei15193.Interactive.Tests
                 => _execute?.Invoke(parameter);
         }
 
-        private object DataContext { get; set; }
+        private object DataModel { get; set; }
         private MockInteractiveViewModel<object> InteractiveViewModel { get; set; }
 
         [TestInitialize]
         public void TestInitialize()
         {
-            DataContext = new object();
-            InteractiveViewModel = new MockInteractiveViewModel<object>(DataContext);
+            DataModel = new object();
+            InteractiveViewModel = new MockInteractiveViewModel<object>(DataModel);
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
             InteractiveViewModel = null;
-            DataContext = null;
+            DataModel = null;
         }
 
         [TestMethod]
         public void TestContextGetsSetThroughConstructor()
         {
-            Assert.AreSame(DataContext, InteractiveViewModel.DataContext);
+            Assert.AreSame(DataModel, InteractiveViewModel.Context.DataModel);
         }
 
         [TestMethod]

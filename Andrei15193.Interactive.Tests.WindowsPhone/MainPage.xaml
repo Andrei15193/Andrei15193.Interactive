@@ -23,7 +23,7 @@
                         <ColorAnimation
                             Storyboard.TargetName="Brush"
                             Storyboard.TargetProperty="Color"
-                            Duration="0" />
+                            Duration="0:0:00.50" />
                     </Storyboard>
                 </VisualState>
                 <VisualState
@@ -32,33 +32,58 @@
                         <ColorAnimation
                             Storyboard.TargetName="Brush"
                             Storyboard.TargetProperty="Color"
+                            To="Yellow"
+                            Duration="0:0:00.50"/>
+                    </Storyboard>
+                </VisualState>
+                <VisualState
+                    x:Name="State3">
+                    <Storyboard>
+                        <ColorAnimation
+                            Storyboard.TargetName="Brush"
+                            Storyboard.TargetProperty="Color"
                             To="Red"
-                            Duration="0" />
+                            Duration="0:0:00.50" />
                     </Storyboard>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Rectangle
-            Width="100"
-            Height="100"
-            Fill="{StaticResource Brush}" />
+        <StackPanel
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <TextBlock
+                Style="{ThemeResource TitleTextBlockStyle}"
+                TextAlignment="Center"
+                Text="{Binding State}" />
+            <Rectangle
+                Width="100"
+                Height="100"
+                Fill="{StaticResource Brush}" />
+            <ItemsControl
+                ItemsSource="{Binding Context.Errors}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="Red"
+                            Text="{Binding Message}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
     </Grid>
     <Page.BottomAppBar>
         <CommandBar>
             <AppBarButton
-                Icon="Back"
-                Label="State 1"
-                Command="{Binding GoToState1Command}" />
-            <AppBarButton
-                Icon="Forward"
-                Label="State 2"
-                Command="{Binding GoToState2Command}" />
+                Icon="Accept"
+                Label="Transition"
+                Command="{Binding BeginTransitionCommand}" />
             <CommandBar.SecondaryCommands>
                 <AppBarButton
-                    Label="Go to second page">
+                    Label="Go to content dialog page">
                     <AppBarButton.Command>
                         <i:NavigateCommand
-                            Page="Andrei15193.Interactive.Tests.WindowsPhone.SecondPage" />
+                            Page="Andrei15193.Interactive.Tests.WindowsPhone.ContentDialogPage" />
                     </AppBarButton.Command>
                 </AppBarButton>
             </CommandBar.SecondaryCommands>

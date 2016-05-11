@@ -1,5 +1,5 @@
 ﻿<i:ContentDialogPage
-    x:Class="Andrei15193.Interactive.Tests.WindowsPhone.SecondPage"
+    x:Class="Andrei15193.Interactive.Tests.WindowsPhone.ContentDialogPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Andrei15193.Interactive.Tests.WindowsPhone"
@@ -12,6 +12,6 @@
         Margin="20">
         <TextBlock
             Style="{StaticResource BodyTextBlockStyle}"
-            Text="This is the second page" />
+            Text="This is a content dialog page" />
     </Grid>
 </i:ContentDialogPage>
