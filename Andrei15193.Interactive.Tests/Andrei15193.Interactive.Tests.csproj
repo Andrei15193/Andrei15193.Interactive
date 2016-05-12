@@ -54,6 +54,7 @@
     <Compile Include="PropertyChangedNotifierTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="InteractiveViewModelTests.cs" />
+    <Compile Include="Validation\AnyConstraintTests.cs" />
     <Compile Include="Validation\ConstraintTests.cs" />
     <Compile Include="Validation\LinearConstraintTests.cs" />
   </ItemGroup>
