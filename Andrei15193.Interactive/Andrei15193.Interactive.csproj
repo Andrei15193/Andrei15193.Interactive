@@ -47,6 +47,7 @@
     <Compile Include="Validation\IConstraint.cs" />
     <Compile Include="Validation\LinearConstraint.cs" />
     <Compile Include="Validation\ValidationError.cs" />
+    <Compile Include="Validation\ValidationErrorsFilterConverter.cs" />
     <Compile Include="ViewModelContext.cs" />
     <Compile Include="ErrorContext.cs" />
     <Compile Include="Interactive.cs" />
