@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Andrei15193.Interactive.Validation;
 
 namespace Andrei15193.Interactive
 {

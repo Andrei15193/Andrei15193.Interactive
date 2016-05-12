@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Andrei15193.Interactive
+namespace Andrei15193.Interactive.Validation
 {
     public class ValidationError
     {

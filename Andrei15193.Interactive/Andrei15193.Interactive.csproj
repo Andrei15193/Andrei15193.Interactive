@@ -41,7 +41,7 @@
   <ItemGroup>
     <Compile Include="ActionStateContext.cs" />
     <Compile Include="ContentDialogPage.cs" />
-    <Compile Include="ValidationError.cs" />
+    <Compile Include="Validation\ValidationError.cs" />
     <Compile Include="ViewModelContext.cs" />
     <Compile Include="ErrorContext.cs" />
     <Compile Include="Interactive.cs" />
