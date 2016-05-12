@@ -61,8 +61,10 @@ namespace Andrei15193.Interactive.Tests.WindowsPhone
                 (sender, backPressedEventArgs) =>
                 {
                     if (rootFrame.CanGoBack)
+                    {
                         rootFrame.GoBack();
-                    backPressedEventArgs.Handled = true;
+                        backPressedEventArgs.Handled = true;
+                    }
                 };
 
             Window.Current.Activate();
