@@ -7,7 +7,7 @@ namespace Andrei15193.Interactive.Validation
     /// <summary>
     /// Represents a static container for various <see cref="IConstraint{TValue}"/> for specific types of objects.
     /// </summary>
-    public static class ConstraintService
+    public static class Constraints
     {
         private class ConstraintKey
             : IEquatable<ConstraintKey>

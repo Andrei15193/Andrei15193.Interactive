@@ -43,7 +43,7 @@
     <Compile Include="ContentDialogPage.cs" />
     <Compile Include="Validation\AnyConstraint.cs" />
     <Compile Include="Validation\Constraint.cs" />
-    <Compile Include="Validation\ConstraintService.cs" />
+    <Compile Include="Validation\Constraints.cs" />
     <Compile Include="Validation\IConstraint.cs" />
     <Compile Include="Validation\LinearConstraint.cs" />
     <Compile Include="Validation\ValidationError.cs" />

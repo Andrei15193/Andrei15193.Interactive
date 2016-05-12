@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Andrei15193.Interactive.Tests.Validation
 {
     [TestClass]
-    public class ConstraintServiceTests
+    public class ConstraintsTests
     {
         private readonly ICollection<string> _constraintNamesToDeregister
             = new HashSet<string>(StringComparer.Ordinal);
@@ -21,18 +21,18 @@ namespace Andrei15193.Interactive.Tests.Validation
         [TestCleanup]
         public void TestCleanup()
         {
-            ConstraintService.DeregisterFor<object>();
+            Constraints.DeregisterFor<object>();
             foreach (var constraintNameToDeregister in _constraintNamesToDeregister)
-                ConstraintService.DeregisterFor<object>(constraintNameToDeregister);
+                Constraints.DeregisterFor<object>(constraintNameToDeregister);
         }
 
         [TestMethod]
         public void TestRegisteringAConstraintWillMakeItRetrievable()
         {
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(expectedConstraint);
+            Constraints.RegisterFor(expectedConstraint);
 
-            var actualConstraint = ConstraintService.GetFor<object>();
+            var actualConstraint = Constraints.GetFor<object>();
 
             Assert.AreSame(expectedConstraint, actualConstraint);
         }
@@ -41,8 +41,8 @@ namespace Andrei15193.Interactive.Tests.Validation
         public void TestTryingToRegisterAConstraintForTheSameTypeWithoutNameThrowsException()
         {
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(expectedConstraint);
-            ConstraintService.RegisterFor(expectedConstraint);
+            Constraints.RegisterFor(expectedConstraint);
+            Constraints.RegisterFor(expectedConstraint);
         }
 
         [TestMethod]
@@ -52,9 +52,9 @@ namespace Andrei15193.Interactive.Tests.Validation
             _constraintNamesToDeregister.Add(constraintName);
 
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(expectedConstraint, constraintName);
+            Constraints.RegisterFor(expectedConstraint, constraintName);
 
-            var actualConstraint = ConstraintService.GetFor<object>(constraintName);
+            var actualConstraint = Constraints.GetFor<object>(constraintName);
 
             Assert.AreSame(expectedConstraint, actualConstraint);
         }
@@ -65,16 +65,16 @@ namespace Andrei15193.Interactive.Tests.Validation
             _constraintNamesToDeregister.Add(constraintName1);
 
             var expectedConstraint1 = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(expectedConstraint1, constraintName1);
+            Constraints.RegisterFor(expectedConstraint1, constraintName1);
 
             var constraintName2 = "test 2";
             _constraintNamesToDeregister.Add(constraintName2);
 
             var expectedConstraint2 = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(expectedConstraint2, constraintName2);
+            Constraints.RegisterFor(expectedConstraint2, constraintName2);
 
-            var actualConstraint1 = ConstraintService.GetFor<object>(constraintName1);
-            var actualConstraint2 = ConstraintService.GetFor<object>(constraintName2);
+            var actualConstraint1 = Constraints.GetFor<object>(constraintName1);
+            var actualConstraint2 = Constraints.GetFor<object>(constraintName2);
 
             Assert.AreNotSame(expectedConstraint1, expectedConstraint2);
             Assert.AreSame(expectedConstraint1, actualConstraint1);
@@ -88,8 +88,8 @@ namespace Andrei15193.Interactive.Tests.Validation
             _constraintNamesToDeregister.Add(constraintName);
 
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(expectedConstraint, constraintName);
-            ConstraintService.RegisterFor(expectedConstraint, constraintName);
+            Constraints.RegisterFor(expectedConstraint, constraintName);
+            Constraints.RegisterFor(expectedConstraint, constraintName);
         }
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
@@ -99,30 +99,30 @@ namespace Andrei15193.Interactive.Tests.Validation
             _constraintNamesToDeregister.Add(constraintName);
 
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(expectedConstraint, constraintName);
-            ConstraintService.RegisterFor(expectedConstraint, constraintName + " ");
+            Constraints.RegisterFor(expectedConstraint, constraintName);
+            Constraints.RegisterFor(expectedConstraint, constraintName + " ");
         }
 
         [TestMethod]
         [ExpectedException(typeof(KeyNotFoundException))]
         public void TestGettingAConstraintForATypeThatDoesNotExistsThrowsException()
         {
-            ConstraintService.GetFor<object>();
+            Constraints.GetFor<object>();
         }
         [TestMethod]
         [ExpectedException(typeof(KeyNotFoundException))]
         public void TestGettingAConstraintForATypeAndNameThatDoesNotExistsThrowsException()
         {
             var constraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(constraint);
+            Constraints.RegisterFor(constraint);
 
-            ConstraintService.GetFor<object>("test");
+            Constraints.GetFor<object>("test");
         }
 
         [TestMethod]
         public void TestTryingToGetAConstraintForATypeThatDoesNotExistsReturnsNull()
         {
-            var expectedConstraint = ConstraintService.TryGetFor<object>();
+            var expectedConstraint = Constraints.TryGetFor<object>();
 
             Assert.IsNull(expectedConstraint);
         }
@@ -130,9 +130,9 @@ namespace Andrei15193.Interactive.Tests.Validation
         public void TestTryingToGetAConstraintForATypeAndNameThatDoesNotExistsThrowsException()
         {
             var constraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
-            ConstraintService.RegisterFor(constraint);
+            Constraints.RegisterFor(constraint);
 
-            var expectedConstraint = ConstraintService.TryGetFor<object>("test");
+            var expectedConstraint = Constraints.TryGetFor<object>("test");
 
             Assert.IsNull(expectedConstraint);
         }
@@ -142,10 +142,10 @@ namespace Andrei15193.Interactive.Tests.Validation
         {
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
 
-            ConstraintService.RegisterFor(expectedConstraint);
-            ConstraintService.DeregisterFor<object>();
+            Constraints.RegisterFor(expectedConstraint);
+            Constraints.DeregisterFor<object>();
 
-            var actualConstraint = ConstraintService.TryGetFor<object>();
+            var actualConstraint = Constraints.TryGetFor<object>();
 
             Assert.IsNull(actualConstraint);
         }
@@ -156,10 +156,10 @@ namespace Andrei15193.Interactive.Tests.Validation
             _constraintNamesToDeregister.Add(constraintName);
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
 
-            ConstraintService.RegisterFor(expectedConstraint, constraintName);
-            ConstraintService.DeregisterFor<object>(constraintName);
+            Constraints.RegisterFor(expectedConstraint, constraintName);
+            Constraints.DeregisterFor<object>(constraintName);
 
-            var actualConstraint = ConstraintService.TryGetFor<object>(constraintName);
+            var actualConstraint = Constraints.TryGetFor<object>(constraintName);
 
             Assert.IsNull(actualConstraint);
         }
@@ -169,11 +169,11 @@ namespace Andrei15193.Interactive.Tests.Validation
             var deregisteredConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
 
-            ConstraintService.RegisterFor(deregisteredConstraint);
-            ConstraintService.DeregisterFor<object>();
-            ConstraintService.RegisterFor(expectedConstraint);
+            Constraints.RegisterFor(deregisteredConstraint);
+            Constraints.DeregisterFor<object>();
+            Constraints.RegisterFor(expectedConstraint);
 
-            var actualConstraint = ConstraintService.TryGetFor<object>();
+            var actualConstraint = Constraints.TryGetFor<object>();
 
             Assert.AreNotSame(deregisteredConstraint, expectedConstraint);
             Assert.AreSame(expectedConstraint, actualConstraint);
@@ -187,11 +187,11 @@ namespace Andrei15193.Interactive.Tests.Validation
             var deregisteredConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
 
-            ConstraintService.RegisterFor(deregisteredConstraint, constraintName);
-            ConstraintService.DeregisterFor<object>(constraintName);
-            ConstraintService.RegisterFor(expectedConstraint, constraintName);
+            Constraints.RegisterFor(deregisteredConstraint, constraintName);
+            Constraints.DeregisterFor<object>(constraintName);
+            Constraints.RegisterFor(expectedConstraint, constraintName);
 
-            var actualConstraint = ConstraintService.TryGetFor<object>(constraintName);
+            var actualConstraint = Constraints.TryGetFor<object>(constraintName);
 
             Assert.AreNotSame(deregisteredConstraint, expectedConstraint);
             Assert.AreSame(expectedConstraint, actualConstraint);
@@ -201,13 +201,13 @@ namespace Andrei15193.Interactive.Tests.Validation
         [ExpectedException(typeof(ArgumentNullException))]
         public void TestRegisteringANullConstraintThrowsException()
         {
-            ConstraintService.RegisterFor<object>(null);
+            Constraints.RegisterFor<object>(null);
         }
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void TestRegisteringANullConstraintWithNameThrowsException()
         {
-            ConstraintService.RegisterFor<object>(null, "test");
+            Constraints.RegisterFor<object>(null, "test");
         }
     }
 }
