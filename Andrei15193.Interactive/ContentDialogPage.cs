@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -12,14 +11,22 @@ namespace Andrei15193.Interactive
         private sealed class AppBatButtonCommand
             : ICommand
         {
-            private ICommand _command;
+            private ICommand _command = null;
+            private bool _canExecute = false;
 
             public AppBatButtonCommand(AppBarButton button)
             {
                 if (button == null)
                     throw new ArgumentNullException(nameof(button));
 
-                button.Loaded += delegate { _RaiseCanExecuteChanged(this, EventArgs.Empty); };
+                button.Loaded +=
+                    delegate
+                    {
+                        _canExecute = false;
+                        _RaiseCanExecuteChanged(this, EventArgs.Empty);
+                        _canExecute = true;
+                        _RaiseCanExecuteChanged(this, EventArgs.Empty);
+                    };
             }
 
             public ICommand Command
@@ -47,7 +54,7 @@ namespace Andrei15193.Interactive
             public event EventHandler CanExecuteChanged;
 
             public bool CanExecute(object parameter)
-                => _command?.CanExecute(parameter) ?? true;
+                => _canExecute && (_command?.CanExecute(parameter) ?? true);
 
             public void Execute(object parameter)
                 => _command?.Execute(null);
@@ -262,13 +269,6 @@ namespace Andrei15193.Interactive
                             if (Frame.CanGoBack && (PrimaryButtonCommand?.CanExecute(PrimaryButtonCommandParameter) ?? true))
                                 Frame.GoBack();
                         };
-#if DEBUG
-            primaryButton.Loaded +=
-                delegate
-                {
-                    Debug.WriteLine("Prmary button loaded.");
-                };
-#endif
 
             return primaryButton;
         }
@@ -289,13 +289,6 @@ namespace Andrei15193.Interactive
                     if (Frame.CanGoBack)
                         Frame.GoBack();
                 };
-#if DEBUG
-            secondaryButton.Loaded +=
-                delegate
-                {
-                    Debug.WriteLine("Secondary button loaded.");
-                };
-#endif
 
             return secondaryButton;
         }
