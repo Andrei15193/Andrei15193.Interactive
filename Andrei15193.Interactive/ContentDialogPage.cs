@@ -1,4 +1,6 @@
-﻿using System.Windows.Input;
+﻿using System;
+using System.Diagnostics;
+using System.Windows.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -7,6 +9,50 @@ namespace Andrei15193.Interactive
     public class ContentDialogPage
         : Page
     {
+        private sealed class AppBatButtonCommand
+            : ICommand
+        {
+            private ICommand _command;
+
+            public AppBatButtonCommand(AppBarButton button)
+            {
+                if (button == null)
+                    throw new ArgumentNullException(nameof(button));
+
+                button.Loaded += delegate { _RaiseCanExecuteChanged(this, EventArgs.Empty); };
+            }
+
+            public ICommand Command
+            {
+                get
+                {
+                    return _command;
+                }
+                set
+                {
+                    if (_command != null)
+                        _command.CanExecuteChanged -= _RaiseCanExecuteChanged;
+
+                    _command = value;
+                    if (_command != null)
+                        _command.CanExecuteChanged += _RaiseCanExecuteChanged;
+
+                    _RaiseCanExecuteChanged(this, EventArgs.Empty);
+                }
+            }
+
+            private void _RaiseCanExecuteChanged(object sender, EventArgs e)
+                => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+
+            public event EventHandler CanExecuteChanged;
+
+            public bool CanExecute(object parameter)
+                => _command?.CanExecute(parameter) ?? true;
+
+            public void Execute(object parameter)
+                => _command?.Execute(null);
+        }
+
         public static string PrimaryButtonTextDefaultValue { get; } = string.Empty;
         public static DependencyProperty PrimaryButtonTextProperty { get; } =
             DependencyProperty.Register(
@@ -43,7 +89,7 @@ namespace Andrei15193.Interactive
         {
             var contentDialogPage = d as ContentDialogPage;
             if (contentDialogPage != null)
-                contentDialogPage.PrimaryButton.Command = e.NewValue as ICommand ?? PrimaryButtonCommandDefaultValue;
+                ((AppBatButtonCommand)contentDialogPage.PrimaryButton.Command).Command = e.NewValue as ICommand ?? PrimaryButtonCommandDefaultValue;
         }
         public ICommand PrimaryButtonCommand
         {
@@ -118,7 +164,7 @@ namespace Andrei15193.Interactive
         {
             var contentDialogPage = d as ContentDialogPage;
             if (contentDialogPage != null)
-                contentDialogPage.SecondaryButton.Command = e.NewValue as ICommand ?? SecondaryButtonCommandDefaultValue;
+                ((AppBatButtonCommand)contentDialogPage.SecondaryButton.Command).Command = e.NewValue as ICommand ?? SecondaryButtonCommandDefaultValue;
         }
         public ICommand SecondaryButtonCommand
         {
@@ -207,15 +253,22 @@ namespace Andrei15193.Interactive
                 {
                     Icon = new SymbolIcon(Symbol.Accept),
                     Label = PrimaryButtonTextDefaultValue,
-                    Command = PrimaryButtonCommandDefaultValue,
-                    CommandParameter = PrimaryButtonCommandParameterDefaultValue
+                    Command = PrimaryButtonCommandDefaultValue
                 };
+            primaryButton.Command = new AppBatButtonCommand(primaryButton) { Command = PrimaryButtonCommandDefaultValue };
             primaryButton.Click +=
-                    delegate
-                    {
-                        if (Frame.CanGoBack && (PrimaryButtonCommand?.CanExecute(PrimaryButtonCommandParameter) ?? true))
-                            Frame.GoBack();
-                    };
+                        delegate
+                        {
+                            if (Frame.CanGoBack && (PrimaryButtonCommand?.CanExecute(PrimaryButtonCommandParameter) ?? true))
+                                Frame.GoBack();
+                        };
+#if DEBUG
+            primaryButton.Loaded +=
+                delegate
+                {
+                    Debug.WriteLine("Prmary button loaded.");
+                };
+#endif
 
             return primaryButton;
         }
@@ -226,16 +279,23 @@ namespace Andrei15193.Interactive
                 {
                     Icon = new SymbolIcon(Symbol.Cancel),
                     Label = SecondaryButtonTextDefaultValue,
-                    Command = SecondaryButtonCommandDefaultValue,
                     CommandParameter = SecondaryButtonCommandParameterDefaultValue,
                     Visibility = SecondaryButtonVisibilityDefaultValue
                 };
+            secondaryButton.Command = new AppBatButtonCommand(secondaryButton) { Command = SecondaryButtonCommandDefaultValue };
             secondaryButton.Click +=
                 delegate
                 {
                     if (Frame.CanGoBack)
                         Frame.GoBack();
                 };
+#if DEBUG
+            secondaryButton.Loaded +=
+                delegate
+                {
+                    Debug.WriteLine("Secondary button loaded.");
+                };
+#endif
 
             return secondaryButton;
         }
