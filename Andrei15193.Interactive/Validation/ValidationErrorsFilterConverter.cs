@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 using Windows.UI.Xaml.Data;
@@ -20,22 +22,36 @@ namespace Andrei15193.Interactive.Validation
                 throw new ArgumentException($"Result cannot be converted to {nameof(targetType)}.", nameof(targetType));
             var validationErrors = (IEnumerable<ValidationError>)value;
 
+            var filteredValidationErrors = validationErrors.Where(GetValidationErrorFilterFor(parameter));
+            var collectionChangedNotifier = validationErrors as INotifyCollectionChanged;
+            if (collectionChangedNotifier != null)
+            {
+                var observableFilteredValidationErrors = new ObservableCollection<ValidationError>(filteredValidationErrors);
+                collectionChangedNotifier.CollectionChanged +=
+                    (sender, e) =>
+                    {
+                        observableFilteredValidationErrors.Clear();
+                        foreach (var validationError in filteredValidationErrors)
+                            observableFilteredValidationErrors.Add(validationError);
+                    };
+                return new ReadOnlyObservableCollection<ValidationError>(observableFilteredValidationErrors);
+            }
+            else
+                return filteredValidationErrors.ToList();
+        }
+
+        private static Func<ValidationError, bool> GetValidationErrorFilterFor(object parameter)
+        {
             if (parameter == null)
-                return from validationError in validationErrors
-                       where validationError?.MemberName == null
-                       select validationError;
+                return validationError => validationError?.MemberName == null;
 
             var memberName = parameter as string;
             if (memberName != null)
-                return from validationError in validationErrors
-                       where StringComparer.OrdinalIgnoreCase.Equals(memberName, validationError?.MemberName)
-                       select validationError;
+                return validationError => StringComparer.OrdinalIgnoreCase.Equals(memberName, validationError?.MemberName);
 
             var memberNames = parameter as IEnumerable<string>;
             if (memberNames != null)
-                return from validationError in validationErrors
-                       where memberNames.Contains(validationError?.MemberName, StringComparer.OrdinalIgnoreCase)
-                       select validationError;
+                return validationError => memberNames.Contains(validationError?.MemberName, StringComparer.OrdinalIgnoreCase);
 
             throw new ArgumentException($"The value provided to {nameof(parameter)} must be null, a string or a collection of strings.", nameof(parameter));
         }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using Andrei15193.Interactive.Validation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -90,6 +92,17 @@ namespace Andrei15193.Interactive.Tests.Validation
         [ExpectedException(typeof(ArgumentException))]
         public void TestWithInvalidParameterTypeThrowsException()
             => Convert(default(int));
+
+        [TestMethod]
+        public void TestConvertingAnObseravleCollectionReturnsAnObservableCollection()
+        {
+            var observableCollection = new ObservableCollection<ValidationError>();
+
+            var result = Converter.Convert(observableCollection, typeof(object), null, null);
+
+            Assert.IsInstanceOfType(result, typeof(IEnumerable<ValidationError>));
+            Assert.IsInstanceOfType(result, typeof(INotifyCollectionChanged));
+        }
 
         private static IEnumerable<ValidationError> Convert(object paramter)
             => (IEnumerable<ValidationError>)Converter.Convert(validationErrors, typeof(object), paramter, null);
