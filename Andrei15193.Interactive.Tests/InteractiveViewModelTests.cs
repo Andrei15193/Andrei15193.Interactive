@@ -39,8 +39,12 @@ namespace Andrei15193.Interactive.Tests
                 base.CreateActionState(name, cancelableAsyncAction);
             }
 
+            new public Task TransitionToAsync(string state, object parameter)
+                => base.TransitionToAsync(state, parameter);
             new public Task TransitionToAsync(string state)
                 => base.TransitionToAsync(state);
+            new public Task EnqueueTransitionToAsync(string state, object parameter)
+                => base.EnqueueTransitionToAsync(state, parameter);
             new public Task EnqueueTransitionToAsync(string state)
                 => base.EnqueueTransitionToAsync(state);
 
@@ -1065,6 +1069,79 @@ namespace Andrei15193.Interactive.Tests
                 completeActionStateEvent.Set();
 
                 await transitionToFollowUpStateTask;
+            }
+        }
+
+        [TestMethod]
+        public async Task TestTransitioningWithParameterSetsItToActionContext()
+        {
+            var parameter = new object();
+            object actualParameter = null;
+            InteractiveViewModel.CreateActionState(
+                ActionState,
+                context =>
+                {
+                    context.NextState = DestinationState;
+                    actualParameter = context.Parameter;
+                });
+
+            await InteractiveViewModel.TransitionToAsync(ActionState, parameter);
+
+            Assert.AreSame(parameter, actualParameter);
+        }
+
+        [TestMethod]
+        public async Task TestEnqueingTransitionWithParameterSetsItToActionContext()
+        {
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            {
+                var parameter = completeActionStateEvent;
+                object actualParameter = null;
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = FollowUpActionState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                    });
+                InteractiveViewModel.CreateActionState(
+                    FollowUpActionState,
+                    context =>
+                    {
+                        context.NextState = DestinationState;
+                        actualParameter = context.Parameter;
+                    });
+
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                var transitionToFollowUpActionStateTask = InteractiveViewModel.EnqueueTransitionToAsync(FollowUpActionState, parameter);
+
+                completeActionStateEvent.Set();
+                await Task.WhenAll(transitionToActionStateTask, transitionToFollowUpActionStateTask);
+
+                Assert.AreSame(parameter, actualParameter);
+            }
+        }
+
+        [TestMethod]
+        public async Task TestUsingTransitionCommandToTransitioningWithParameterSetsItToActionContext()
+        {
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            {
+                var parameter = completeActionStateEvent;
+                object actualParameter = null;
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    context =>
+                    {
+                        context.NextState = DestinationState;
+                        actualParameter = context.Parameter;
+                    });
+                var transitionCommand = InteractiveViewModel.GetTransitionCommand(ActionState);
+                transitionCommand.Execute(parameter);
+
+                await Task.Factory.StartNew(completeActionStateEvent.Wait);
+
+                Assert.AreSame(parameter, actualParameter);
             }
         }
     }

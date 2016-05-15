@@ -184,7 +184,7 @@ namespace Andrei15193.Interactive
                 var destinationState = _destinationState;
                 while (destinationState != null)
                 {
-                    var transitionTask = _interactiveViewModel.TransitionToAsync(destinationState);
+                    var transitionTask = _interactiveViewModel.TransitionToAsync(destinationState, parameter);
                     try
                     {
                         await transitionTask;
@@ -263,7 +263,7 @@ namespace Andrei15193.Interactive
                 new ViewModelState(name, cancelableAsyncAction));
         }
 
-        protected Task TransitionToAsync(string state)
+        protected Task TransitionToAsync(string state, object parameter)
         {
             if (state == null)
                 throw new ArgumentNullException(nameof(state));
@@ -282,7 +282,7 @@ namespace Andrei15193.Interactive
                             ViewModelState viewModelState;
                             while (_states.TryGetValue(nextState, out viewModelState))
                             {
-                                var actionStateContext = new ActionStateContext(this, _state);
+                                var actionStateContext = new ActionStateContext(this, _state, parameter);
                                 State = nextState;
 
                                 if (viewModelState.IsCancellable)
@@ -306,8 +306,10 @@ namespace Andrei15193.Interactive
                     State = nextState;
                 }).Invoke();
         }
+        protected Task TransitionToAsync(string state)
+            => TransitionToAsync(state, null);
 
-        protected Task EnqueueTransitionToAsync(string state)
+        protected Task EnqueueTransitionToAsync(string state, object paramter)
         {
             if (state == null)
                 throw new ArgumentNullException(nameof(state));
@@ -315,7 +317,7 @@ namespace Andrei15193.Interactive
             if (_lastTransitionTask.IsCompleted)
             {
                 _lastEnqueuedState = null;
-                _lastTransitionTask = TransitionToAsync(state);
+                _lastTransitionTask = TransitionToAsync(state, paramter);
             }
             else if (!StateStringComparer.Equals(_lastEnqueuedState, state))
             {
@@ -324,12 +326,14 @@ namespace Andrei15193.Interactive
                     async delegate
                     {
                         await _lastTransitionTask;
-                        await TransitionToAsync(state);
+                        await TransitionToAsync(state, paramter);
                     }).Invoke();
             }
 
             return _lastTransitionTask;
         }
+        protected Task EnqueueTransitionToAsync(string state)
+            => EnqueueTransitionToAsync(state, null);
 
         protected ICommand BindCommand(ICommand command, IEnumerable<string> states)
         {
