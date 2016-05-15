@@ -184,6 +184,7 @@ namespace Andrei15193.Interactive
                 var destinationState = _destinationState;
                 while (destinationState != null)
                 {
+                    var canTransitionWhenFaulted = !_interactiveViewModel._isInActionState;
                     var transitionTask = _interactiveViewModel.TransitionToAsync(destinationState, parameter);
                     try
                     {
@@ -199,7 +200,72 @@ namespace Andrei15193.Interactive
                         if (transitionTask.IsCanceled)
                             errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state);
                         else
-                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, transitionTask.Exception);
+                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, canTransitionWhenFaulted, transitionTask.Exception);
+
+                        _errorHandler(errorContext);
+                        if (!errorContext.CanTransition)
+                            destinationState = null;
+                        else if (errorContext.NextState == null)
+                            throw new InvalidOperationException("Cannot transition to 'null' state.");
+                        else
+                            destinationState = errorContext.NextState;
+                    }
+                }
+
+                (parameter as ManualResetEventSlim)?.Set();
+            }
+
+            public ICommand BindTo(IEnumerable<string> states)
+                => _interactiveViewModel.BindCommand(this, states);
+            public ICommand BindTo(params string[] states)
+                => BindTo(states.AsEnumerable());
+        }
+
+        protected sealed class EnqueuingTransitionCommand
+            : ICommand
+        {
+            private readonly InteractiveViewModel _interactiveViewModel;
+            private readonly string _destinationState;
+            private readonly Action<ErrorContext> _errorHandler;
+
+            internal EnqueuingTransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState, Action<ErrorContext> errorHandler)
+            {
+                if (interactiveViewModel == null)
+                    throw new ArgumentNullException(nameof(interactiveViewModel));
+                if (destinationState == null)
+                    throw new ArgumentNullException(nameof(destinationState));
+
+                _interactiveViewModel = interactiveViewModel;
+                _destinationState = destinationState;
+                _errorHandler = errorHandler;
+            }
+
+            event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+
+            public bool CanExecute(object parameter)
+                => true;
+
+            public async void Execute(object parameter)
+            {
+                var destinationState = _destinationState;
+                while (destinationState != null)
+                {
+                    var enqueuedTransitionTask = _interactiveViewModel.EnqueueTransitionToAsync(destinationState, parameter);
+                    try
+                    {
+                        await enqueuedTransitionTask;
+                        destinationState = null;
+                    }
+                    catch
+                    {
+                        if (_errorHandler == null)
+                            throw new InvalidOperationException("Unhandled exception by user code.", enqueuedTransitionTask.Exception);
+
+                        ErrorContext errorContext;
+                        if (enqueuedTransitionTask.IsCanceled)
+                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state);
+                        else
+                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, false, enqueuedTransitionTask.Exception);
 
                         _errorHandler(errorContext);
                         if (errorContext.NextState == null)
@@ -265,14 +331,14 @@ namespace Andrei15193.Interactive
 
         protected Task TransitionToAsync(string state, object parameter)
         {
-            if (state == null)
-                throw new ArgumentNullException(nameof(state));
-            if (_isInActionState)
-                throw new InvalidOperationException("Cannot transition to a different state while in an action state.");
-
             return _lastTransitionTask = new Func<Task>(
                 async delegate
                 {
+                    if (state == null)
+                        throw new ArgumentNullException(nameof(state));
+                    if (_isInActionState)
+                        throw new InvalidOperationException("Cannot transition to a different state while in an action state.");
+
                     var nextState = state;
                     try
                     {
@@ -359,6 +425,11 @@ namespace Andrei15193.Interactive
             => GetTransitionCommand(destinationState, null);
         protected TransitionCommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
             => new TransitionCommand(this, destinationState, errorHandler);
+
+        protected EnqueuingTransitionCommand GetEnqueuingTransitionCommand(string destinationState)
+            => GetEnqueuingTransitionCommand(destinationState, null);
+        protected EnqueuingTransitionCommand GetEnqueuingTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
+            => new EnqueuingTransitionCommand(this, destinationState, errorHandler);
     }
 
     public class InteractiveViewModel<TDataModel>

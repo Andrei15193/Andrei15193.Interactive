@@ -7,19 +7,23 @@ namespace Andrei15193.Interactive
         internal ErrorContext(InteractiveViewModel interactiveViewModel, string faultedState)
         {
             InteractiveViewModel = interactiveViewModel;
+            CanTransition = true;
             FaultedState = faultedState;
             IsCanceled = true;
             AggregateException = null;
         }
-        internal ErrorContext(InteractiveViewModel interactiveViewModel, string faultedState, AggregateException exception)
+        internal ErrorContext(InteractiveViewModel interactiveViewModel, string faultedState, bool canTransition, AggregateException exception)
         {
             InteractiveViewModel = interactiveViewModel;
+            CanTransition = canTransition;
             FaultedState = faultedState;
             IsCanceled = false;
             AggregateException = exception;
         }
 
         public InteractiveViewModel InteractiveViewModel { get; }
+
+        public bool CanTransition { get; }
 
         public string FaultedState { get; }
 

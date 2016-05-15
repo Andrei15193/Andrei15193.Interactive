@@ -57,6 +57,11 @@ namespace Andrei15193.Interactive.Tests
                 => base.GetTransitionCommand(destinationState);
             new public ICommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
                 => base.GetTransitionCommand(destinationState, errorHandler);
+
+            new public ICommand GetEnqueuingTransitionCommand(string destinationState)
+                => base.GetEnqueuingTransitionCommand(destinationState);
+            new public ICommand GetEnqueuingTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
+                => base.GetEnqueuingTransitionCommand(destinationState, errorHandler);
         }
 
         private sealed class BoundMockInteractiveViewModel
@@ -1143,6 +1148,86 @@ namespace Andrei15193.Interactive.Tests
 
                 Assert.AreSame(parameter, actualParameter);
             }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task TestExecutingTransitionCommandWhileInActionStateThrowsException()
+        {
+            Exception exception = null;
+            using (var continueActionStateEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(continueActionStateEvent.Wait);
+                    });
+
+                var transitionCommand = InteractiveViewModel.GetTransitionCommand(FinalState, errorContext => exception = errorContext.Exception);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+
+                transitionCommand.Execute(null);
+                continueActionStateEvent.Set();
+                await transitionToActionStateTask;
+
+            }
+
+            throw exception;
+        }
+
+        [TestMethod]
+        public async Task TestErrorContextHasCanTransitionSetToFalseWhenTheViewModelIsInAnActiveState()
+        {
+            var canTransition = true;
+            using (var continueActionStateEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(continueActionStateEvent.Wait);
+                    });
+
+                var transitionCommand = InteractiveViewModel.GetTransitionCommand(FinalState, errorContext => canTransition = errorContext.CanTransition);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+
+                transitionCommand.Execute(null);
+                continueActionStateEvent.Set();
+                await transitionToActionStateTask;
+            }
+
+            Assert.IsFalse(canTransition);
+        }
+
+        [TestMethod]
+        public async Task TestExceptionIsNotThrownWhenUsingEnqueuingTransitionCommandAndTheViewModelIsInAnActiveState()
+        {
+            Exception exception = null;
+            using (var commandExecutedEvent = new ManualResetEventSlim(false))
+            using (var continueActionStateEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(continueActionStateEvent.Wait);
+                    });
+
+                var enqueuedTransitionCommand = InteractiveViewModel.GetEnqueuingTransitionCommand(FinalState, errorContext => exception = errorContext.Exception);
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+
+                enqueuedTransitionCommand.Execute(commandExecutedEvent);
+                continueActionStateEvent.Set();
+                await transitionToActionStateTask;
+
+                await Task.Factory.StartNew(commandExecutedEvent.Wait);
+            }
+
+            Assert.IsNull(exception);
         }
     }
 }

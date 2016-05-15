@@ -60,6 +60,31 @@ namespace Andrei15193.Interactive
                 => _command?.Execute(null);
         }
 
+        public static Symbol PrimaryButtonIconDefaultValue { get; } = Symbol.Accept;
+        public static DependencyProperty PrimaryButtonIconProperty { get; } =
+            DependencyProperty.Register(
+                nameof(PrimaryButtonIcon),
+                typeof(Symbol),
+                typeof(ContentDialogPage),
+                new PropertyMetadata(PrimaryButtonIconDefaultValue, PrimaryButtonIconPropertyChanged));
+        private static void PrimaryButtonIconPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var contentDialogPage = d as ContentDialogPage;
+            if (contentDialogPage != null)
+                contentDialogPage.PrimaryButton.Icon = new SymbolIcon(e.NewValue as Symbol? ?? PrimaryButtonIconDefaultValue);
+        }
+        public Symbol PrimaryButtonIcon
+        {
+            get
+            {
+                return (Symbol)GetValue(PrimaryButtonIconProperty);
+            }
+            set
+            {
+                SetValue(PrimaryButtonIconProperty, value);
+            }
+        }
+
         public static string PrimaryButtonTextDefaultValue { get; } = string.Empty;
         public static DependencyProperty PrimaryButtonTextProperty { get; } =
             DependencyProperty.Register(
@@ -132,6 +157,31 @@ namespace Andrei15193.Interactive
             set
             {
                 SetValue(PrimaryButtonCommandParameterProperty, value);
+            }
+        }
+
+        public static Symbol SecondaryButtonIconDefaultValue { get; } = Symbol.Cancel;
+        public static DependencyProperty SecondaryButtonIconProperty { get; } =
+            DependencyProperty.Register(
+                nameof(SecondaryButtonIcon),
+                typeof(Symbol),
+                typeof(ContentDialogPage),
+                new PropertyMetadata(SecondaryButtonIconDefaultValue, SecondaryButtonIconPropertyChanged));
+        private static void SecondaryButtonIconPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var contentDialogPage = d as ContentDialogPage;
+            if (contentDialogPage != null)
+                contentDialogPage.SecondaryButton.Icon = new SymbolIcon(e.NewValue as Symbol? ?? SecondaryButtonIconDefaultValue);
+        }
+        public Symbol SecondaryButtonIcon
+        {
+            get
+            {
+                return (Symbol)GetValue(SecondaryButtonIconProperty);
+            }
+            set
+            {
+                SetValue(SecondaryButtonIconProperty, value);
             }
         }
 
