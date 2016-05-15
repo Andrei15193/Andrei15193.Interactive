@@ -336,14 +336,16 @@ namespace Andrei15193.Interactive.Tests
             var raiseCount = 0;
             await InteractiveViewModel.TransitionToAsync(InitialState);
 
-            using (var exceptionThrownEvent = new ManualResetEventSlim(false))
+            using (var reachedActionStateEvent = new ManualResetEventSlim(false))
+            using (var continueActionStateTransitionEvent = new ManualResetEventSlim(false))
             {
                 InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
                     {
+                        reachedActionStateEvent.Set();
                         actionContext.NextState = DestinationState;
-                        return Task.Factory.StartNew(exceptionThrownEvent.Wait);
+                        return Task.Factory.StartNew(continueActionStateTransitionEvent.Wait);
                     });
 
                 PropertyChangedEventHandler eventHandler = null;
@@ -356,10 +358,10 @@ namespace Andrei15193.Interactive.Tests
                     };
 
                 var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
-
+                await Task.Factory.StartNew(reachedActionStateEvent.Wait);
                 InteractiveViewModel.PropertyChanged += eventHandler;
 
-                exceptionThrownEvent.Set();
+                continueActionStateTransitionEvent.Set();
                 await actionStateTransitionTask;
             }
 
@@ -521,6 +523,7 @@ namespace Andrei15193.Interactive.Tests
         {
             await InteractiveViewModel.TransitionToAsync(InitialState);
 
+            using (var reachedActionStateEvent = new ManualResetEventSlim(false))
             using (var transitionedToFollowUpStateEvent = new ManualResetEventSlim(false))
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
@@ -536,6 +539,7 @@ namespace Andrei15193.Interactive.Tests
                     ActionState,
                     (context, cancellationToken) =>
                     {
+                        reachedActionStateEvent.Set();
                         context.NextState = FollowUpActionState;
                         return Task.Factory
                             .StartNew(completeActionEvent.Wait)
@@ -551,6 +555,7 @@ namespace Andrei15193.Interactive.Tests
 
                 var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
+                await Task.Factory.StartNew(reachedActionStateEvent.Wait);
                 Assert.IsTrue(InteractiveViewModel.CancelCommand.CanExecute(null));
                 completeActionEvent.Set();
 
@@ -573,18 +578,21 @@ namespace Andrei15193.Interactive.Tests
 
             await InteractiveViewModel.TransitionToAsync(InitialState);
 
+            using (var reachedActionStateEvent = new ManualResetEventSlim(false))
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
                 InteractiveViewModel.CreateActionState(
                     ActionState,
                     (context, cancellationToken) =>
                     {
+                        reachedActionStateEvent.Set();
                         context.NextState = DestinationState;
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
 
                 var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
+                await Task.Factory.StartNew(reachedActionStateEvent.Wait);
                 Assert.AreEqual(1, raiseCount);
 
                 completeActionEvent.Set();

@@ -77,19 +77,25 @@ namespace Andrei15193.Interactive
         private sealed class CancellationCommand
             : ICommand
         {
-            private CancellationTokenSource _cancellationTokenSource;
+            private bool _canExecuteCommand;
 
             public CancellationTokenSource CancellationTokenSource
             {
+                get;
+                set;
+            }
+
+            public bool CanExecuteCommand
+            {
                 get
                 {
-                    return _cancellationTokenSource;
+                    return _canExecuteCommand;
                 }
                 set
                 {
-                    if (_cancellationTokenSource != value)
+                    if (_canExecuteCommand != value)
                     {
-                        _cancellationTokenSource = value;
+                        _canExecuteCommand = value;
                         CanExecuteChanged?.Invoke(this, EventArgs.Empty);
                     }
                 }
@@ -98,14 +104,14 @@ namespace Andrei15193.Interactive
             public event EventHandler CanExecuteChanged;
 
             public bool CanExecute(object delay)
-                => _cancellationTokenSource != null;
+                => CancellationTokenSource != null && _canExecuteCommand;
 
             public void Execute(object delay)
             {
-                if (!CanExecute(delay))
+                if (CancellationTokenSource == null)
                     throw new InvalidOperationException("Cannot invoke the cancel command while the view model is in an uncancelable state.");
 
-                _cancellationTokenSource.Cancel();
+                CancellationTokenSource.Cancel();
             }
         }
 
@@ -330,8 +336,7 @@ namespace Andrei15193.Interactive
         }
 
         protected Task TransitionToAsync(string state, object parameter)
-        {
-            return _lastTransitionTask = new Func<Task>(
+            => _lastTransitionTask = new Func<Task>(
                 async delegate
                 {
                     if (state == null)
@@ -345,16 +350,21 @@ namespace Andrei15193.Interactive
                         _isInActionState = true;
                         using (var cancellationTokenSource = new CancellationTokenSource())
                         {
+                            _cancelCommand.CancellationTokenSource = cancellationTokenSource;
                             ViewModelState viewModelState;
                             while (_states.TryGetValue(nextState, out viewModelState))
                             {
                                 var actionStateContext = new ActionStateContext(this, _state, parameter);
+
+                                _state = nextState;
+                                await Task.Yield();
                                 State = nextState;
 
                                 if (viewModelState.IsCancellable)
-                                    _cancelCommand.CancellationTokenSource = cancellationTokenSource;
+                                    _cancelCommand.CanExecuteCommand = true;
                                 else
-                                    _cancelCommand.CancellationTokenSource = null;
+                                    _cancelCommand.CanExecuteCommand = false;
+
                                 await viewModelState.ExecuteAsync(actionStateContext, cancellationTokenSource.Token);
 
                                 if (actionStateContext.NextState == null)
@@ -365,13 +375,13 @@ namespace Andrei15193.Interactive
                     }
                     finally
                     {
+                        _cancelCommand.CanExecuteCommand = false;
                         _cancelCommand.CancellationTokenSource = null;
                         _isInActionState = false;
                     }
 
                     State = nextState;
                 }).Invoke();
-        }
         protected Task TransitionToAsync(string state)
             => TransitionToAsync(state, null);
 
