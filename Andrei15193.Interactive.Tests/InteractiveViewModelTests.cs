@@ -15,6 +15,7 @@ namespace Andrei15193.Interactive.Tests
         private const string InitialState = "initialTestState";
         private const string ActionState = "actionTestState";
         private const string FollowUpActionState = "followUpActionTestState";
+        private const string SecondFollowUpActionState = "secondFollowUpActionTestState";
         private const string DestinationState = "destinationTestState";
         private const string FinalState = "finalTestState";
 
@@ -1286,6 +1287,67 @@ namespace Andrei15193.Interactive.Tests
             }
 
             Assert.IsNull(exception);
+        }
+
+        [TestMethod]
+        public async Task TestEnqueuingTwoTransitionsWillMakeTheViewModelTransitionToThemInTheSameOrderTheQueuingWasDone()
+        {
+            var transitions = new List<string>();
+            InteractiveViewModel.PropertyChanged +=
+                (sender, e) =>
+                {
+                    if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                        transitions.Add(InteractiveViewModel.State);
+                };
+
+            using (var completeActionStateEvent = new ManualResetEventSlim(false))
+            using (var completeFollowUpStateEvent = new ManualResetEventSlim(false))
+            using (var completeSecondFollowUpStateEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeActionStateEvent.Wait);
+                    });
+                InteractiveViewModel.CreateActionState(
+                    FollowUpActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeFollowUpStateEvent.Wait);
+                    });
+                InteractiveViewModel.CreateActionState(
+                    SecondFollowUpActionState,
+                    async context =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(completeSecondFollowUpStateEvent.Wait);
+                    });
+
+                var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                var transitionToFollowUpStateTask = InteractiveViewModel.EnqueueTransitionToAsync(FollowUpActionState);
+                var transitionToSecondFollowUpStateTask = InteractiveViewModel.EnqueueTransitionToAsync(SecondFollowUpActionState);
+
+                completeActionStateEvent.Set();
+                completeFollowUpStateEvent.Set();
+                completeSecondFollowUpStateEvent.Set();
+
+                await Task.WhenAll(transitionToActionStateTask, transitionToFollowUpStateTask, transitionToSecondFollowUpStateTask);
+            }
+
+            Assert.IsTrue(
+                transitions.SequenceEqual(
+                    new[]
+                    {
+                        ActionState,
+                        DestinationState,
+                        FollowUpActionState,
+                        DestinationState,
+                        SecondFollowUpActionState,
+                        DestinationState
+                    }));
         }
     }
 }

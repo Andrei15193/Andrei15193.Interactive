@@ -401,11 +401,13 @@ namespace Andrei15193.Interactive
             }
             else if (!StateStringComparer.Equals(_lastEnqueuedState, state))
             {
+                var previousTransitionTask = _lastTransitionTask;
                 _lastEnqueuedState = state;
                 _lastTransitionTask = new Func<Task>(
                     async delegate
                     {
-                        await _lastTransitionTask;
+                        await Task.Yield();
+                        await previousTransitionTask;
                         await TransitionToAsync(state, paramter);
                     }).Invoke();
             }
