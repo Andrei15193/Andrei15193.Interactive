@@ -58,10 +58,56 @@ namespace Andrei15193.Interactive.Tests
             new public ICommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
                 => base.GetTransitionCommand(destinationState, errorHandler);
 
+            public ICommand GetTransitionCommand(string destinationState, ManualResetEventSlim completionEvent)
+            {
+                var transitionCommand = base.GetTransitionCommand(destinationState);
+                transitionCommand.ExecuteCompleted +=
+                    delegate
+                    {
+                        completionEvent.Set();
+                    };
+
+                return transitionCommand;
+            }
+            public ICommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler, ManualResetEventSlim completionEvent)
+            {
+                var transitionCommand = base.GetTransitionCommand(destinationState, errorHandler);
+                transitionCommand.ExecuteCompleted +=
+                    delegate
+                    {
+                        completionEvent.Set();
+                    };
+
+                return transitionCommand;
+            }
+
             new public ICommand GetEnqueuingTransitionCommand(string destinationState)
                 => base.GetEnqueuingTransitionCommand(destinationState);
             new public ICommand GetEnqueuingTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
                 => base.GetEnqueuingTransitionCommand(destinationState, errorHandler);
+
+            public ICommand GetEnqueuingTransitionCommand(string destinationState, ManualResetEventSlim completionEvent)
+            {
+                var enqueuingTransitionCommand = base.GetEnqueuingTransitionCommand(destinationState);
+                enqueuingTransitionCommand.ExecuteCompleted +=
+                    delegate
+                    {
+                        completionEvent.Set();
+                    };
+
+                return enqueuingTransitionCommand;
+            }
+            public ICommand GetEnqueuingTransitionCommand(string destinationState, Action<ErrorContext> errorHandler, ManualResetEventSlim completionEvent)
+            {
+                var enqueuingTransitionCommand = base.GetEnqueuingTransitionCommand(destinationState, errorHandler);
+                enqueuingTransitionCommand.ExecuteCompleted +=
+                    delegate
+                    {
+                        completionEvent.Set();
+                    };
+
+                return enqueuingTransitionCommand;
+            }
         }
 
         private sealed class BoundMockInteractiveViewModel
@@ -783,9 +829,10 @@ namespace Andrei15193.Interactive.Tests
                         context =>
                         {
                             context.NextState = FinalState;
-                        });
+                        },
+                        transitionCompletedEvent);
 
-                transitionCommand.Execute(transitionCompletedEvent);
+                transitionCommand.Execute(null);
 
                 await Task.Factory.StartNew(transitionCompletedEvent.Wait);
 
@@ -824,9 +871,10 @@ namespace Andrei15193.Interactive.Tests
                         context =>
                         {
                             context.NextState = FollowUpActionState;
-                        });
+                        },
+                        transitionCompletedEvent);
 
-                transitionCommand.Execute(transitionCompletedEvent);
+                transitionCommand.Execute(null);
 
                 await Task.Factory.StartNew(transitionCompletedEvent.Wait);
             }
@@ -861,9 +909,10 @@ namespace Andrei15193.Interactive.Tests
                         {
                             context.NextState = FinalState;
                             actualException = context.Exception;
-                        });
+                        },
+                        transitionCompletedEvent);
 
-                transitionCommand.Execute(transitionCompletedEvent);
+                transitionCommand.Execute(null);
 
                 await Task.Factory.StartNew(transitionCompletedEvent.Wait);
             }
@@ -893,9 +942,10 @@ namespace Andrei15193.Interactive.Tests
                         {
                             context.NextState = FinalState;
                             isCanceled = context.IsCanceled;
-                        });
+                        },
+                        transitionCompletedEvent);
 
-                transitionCommand.Execute(transitionCompletedEvent);
+                transitionCommand.Execute(null);
 
                 InteractiveViewModel.CancelCommand.Execute(null);
                 cancelCommandExecutedEvent.Set();
@@ -1108,7 +1158,7 @@ namespace Andrei15193.Interactive.Tests
         {
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                var parameter = completeActionStateEvent;
+                var parameter = new object();
                 object actualParameter = null;
                 InteractiveViewModel.CreateActionState(
                     ActionState,
@@ -1140,7 +1190,7 @@ namespace Andrei15193.Interactive.Tests
         {
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                var parameter = completeActionStateEvent;
+                var parameter = new object();
                 object actualParameter = null;
                 InteractiveViewModel.CreateActionState(
                     ActionState,
@@ -1149,7 +1199,7 @@ namespace Andrei15193.Interactive.Tests
                         context.NextState = DestinationState;
                         actualParameter = context.Parameter;
                     });
-                var transitionCommand = InteractiveViewModel.GetTransitionCommand(ActionState);
+                var transitionCommand = InteractiveViewModel.GetTransitionCommand(ActionState, completeActionStateEvent);
                 transitionCommand.Execute(parameter);
 
                 await Task.Factory.StartNew(completeActionStateEvent.Wait);
@@ -1225,10 +1275,10 @@ namespace Andrei15193.Interactive.Tests
                         await Task.Factory.StartNew(continueActionStateEvent.Wait);
                     });
 
-                var enqueuedTransitionCommand = InteractiveViewModel.GetEnqueuingTransitionCommand(FinalState, errorContext => exception = errorContext.Exception);
+                var enqueuedTransitionCommand = InteractiveViewModel.GetEnqueuingTransitionCommand(FinalState, errorContext => exception = errorContext.Exception, commandExecutedEvent);
                 var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
-                enqueuedTransitionCommand.Execute(commandExecutedEvent);
+                enqueuedTransitionCommand.Execute(null);
                 continueActionStateEvent.Set();
                 await transitionToActionStateTask;
 

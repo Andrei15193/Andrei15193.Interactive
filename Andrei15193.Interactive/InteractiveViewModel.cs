@@ -182,6 +182,8 @@ namespace Andrei15193.Interactive
 
             event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
 
+            public event EventHandler ExecuteCompleted;
+
             public bool CanExecute(object parameter)
                 => true;
 
@@ -218,7 +220,7 @@ namespace Andrei15193.Interactive
                     }
                 }
 
-                (parameter as ManualResetEventSlim)?.Set();
+                ExecuteCompleted?.Invoke(this, EventArgs.Empty);
             }
 
             public ICommand BindTo(IEnumerable<string> states)
@@ -247,6 +249,8 @@ namespace Andrei15193.Interactive
             }
 
             event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+
+            public event EventHandler ExecuteCompleted;
 
             public bool CanExecute(object parameter)
                 => true;
@@ -281,7 +285,7 @@ namespace Andrei15193.Interactive
                     }
                 }
 
-                (parameter as ManualResetEventSlim)?.Set();
+                ExecuteCompleted?.Invoke(this, EventArgs.Empty);
             }
 
             public ICommand BindTo(IEnumerable<string> states)
