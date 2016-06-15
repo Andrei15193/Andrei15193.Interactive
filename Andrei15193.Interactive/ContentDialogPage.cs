@@ -61,7 +61,7 @@ namespace Andrei15193.Interactive
         }
 
         public static Symbol PrimaryButtonIconDefaultValue { get; } = Symbol.Accept;
-        public static DependencyProperty PrimaryButtonIconProperty { get; } =
+        public static readonly DependencyProperty PrimaryButtonIconProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonIcon),
                 typeof(Symbol),
@@ -86,7 +86,7 @@ namespace Andrei15193.Interactive
         }
 
         public static string PrimaryButtonTextDefaultValue { get; } = string.Empty;
-        public static DependencyProperty PrimaryButtonTextProperty { get; } =
+        public static readonly DependencyProperty PrimaryButtonTextProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonText),
                 typeof(string),
@@ -111,7 +111,7 @@ namespace Andrei15193.Interactive
         }
 
         public static ICommand PrimaryButtonCommandDefaultValue { get; } = null;
-        public static DependencyProperty PrimaryButtonCommandProperty { get; } =
+        public static readonly DependencyProperty PrimaryButtonCommandProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonCommand),
                 typeof(ICommand),
@@ -136,7 +136,7 @@ namespace Andrei15193.Interactive
         }
 
         public static object PrimaryButtonCommandParameterDefaultValue { get; } = null;
-        public static DependencyProperty PrimaryButtonCommandParameterProperty { get; } =
+        public static readonly DependencyProperty PrimaryButtonCommandParameterProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonCommandParameter),
                 typeof(object),
@@ -161,7 +161,7 @@ namespace Andrei15193.Interactive
         }
 
         public static Symbol SecondaryButtonIconDefaultValue { get; } = Symbol.Cancel;
-        public static DependencyProperty SecondaryButtonIconProperty { get; } =
+        public static readonly DependencyProperty SecondaryButtonIconProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonIcon),
                 typeof(Symbol),
@@ -186,7 +186,7 @@ namespace Andrei15193.Interactive
         }
 
         public static string SecondaryButtonTextDefaultValue { get; } = string.Empty;
-        public static DependencyProperty SecondaryButtonTextProperty { get; } =
+        public static readonly DependencyProperty SecondaryButtonTextProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonText),
                 typeof(string),
@@ -211,7 +211,7 @@ namespace Andrei15193.Interactive
         }
 
         public static ICommand SecondaryButtonCommandDefaultValue { get; } = null;
-        public static DependencyProperty SecondaryButtonCommandProperty { get; } =
+        public static readonly DependencyProperty SecondaryButtonCommandProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonCommand),
                 typeof(ICommand),
@@ -236,7 +236,7 @@ namespace Andrei15193.Interactive
         }
 
         public static object SecondaryButtonCommandParameterDefaultValue { get; } = null;
-        public static DependencyProperty SecondaryButtonCommandParameterProperty { get; } =
+        public static readonly DependencyProperty SecondaryButtonCommandParameterProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonCommandParameter),
                 typeof(object),
@@ -261,7 +261,7 @@ namespace Andrei15193.Interactive
         }
 
         public static Visibility SecondaryButtonVisibilityDefaultValue { get; } = Visibility.Collapsed;
-        public static DependencyProperty SecondaryButtonVisibilityProperty { get; } =
+        public static readonly DependencyProperty SecondaryButtonVisibilityProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonVisibility),
                 typeof(Visibility),
