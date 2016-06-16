@@ -37,7 +37,10 @@
     <DocumentationFile>bin\Release\Andrei15193.Interactive.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>Andrei15193.Interactive.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ActionStateContext.cs" />
@@ -58,14 +61,15 @@
     <Compile Include="InteractiveViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Windows">
-      <HintPath>C:\Program Files (x86)\Microsoft SDKs\Portable\v14.0\110C4FEFF2BA61C0746933A9ED6E248D\Windows.winmd</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <None Include="Andrei15193.Interactive.nuspec" />
+    <None Include="Andrei15193.Interactive.pfx" />
+    <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Andrei15193.Interactive.nuspec" />
-    <None Include="project.json" />
+    <Reference Include="Windows">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Portable\v14.0\110C4FEFF2BA61C0746933A9ED6E248D\Windows.winmd</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>

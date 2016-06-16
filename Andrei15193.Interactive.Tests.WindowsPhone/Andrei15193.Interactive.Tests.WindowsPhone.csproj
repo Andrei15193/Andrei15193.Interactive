@@ -79,13 +79,6 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <ProjectReference Include="..\Andrei15193.Interactive\Andrei15193.Interactive.csproj">
-      <Project>{a8e94ce4-ad21-4ba2-9280-b5614af59980}</Project>
-      <Name>Andrei15193.Interactive</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -124,6 +117,12 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Andrei15193.Interactive\Andrei15193.Interactive.csproj">
+      <Project>{a8e94ce4-ad21-4ba2-9280-b5614af59980}</Project>
+      <Name>Andrei15193.Interactive</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>

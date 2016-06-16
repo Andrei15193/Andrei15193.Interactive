@@ -9,7 +9,7 @@ namespace Andrei15193.Interactive
 {
     public static class Interactive
     {
-        public static DependencyProperty ViewModelProperty { get; } =
+        public static readonly DependencyProperty ViewModelProperty =
             DependencyProperty.RegisterAttached("ViewModel",
                 typeof(InteractiveViewModel),
                 typeof(Interactive),

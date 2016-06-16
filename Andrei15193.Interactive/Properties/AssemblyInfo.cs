@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Andrei Fangli")]
 [assembly: AssemblyProduct("Andrei15193.Interactive")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
-[assembly: AssemblyCulture("en-US")]
+[assembly: AssemblyCulture("")]
 [assembly: NeutralResourcesLanguage("en")]
 
 // Version information for an assembly consists of the following four values:
