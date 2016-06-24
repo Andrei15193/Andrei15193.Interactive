@@ -4,8 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Andrei15193.Interactive.Tests.WindowsPhone"
     xmlns:i="using:Andrei15193.Interactive"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-    i:Interactive.ViewModel="{Binding}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
         <SolidColorBrush
             x:Name="Brush"
@@ -14,7 +13,8 @@
     <Page.DataContext>
         <local:TestInteractiveViewModel />
     </Page.DataContext>
-    <Grid>
+    <Grid
+        i:Interactive.VisualState="{Binding State}">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState
@@ -33,7 +33,7 @@
                             Storyboard.TargetName="Brush"
                             Storyboard.TargetProperty="Color"
                             To="Yellow"
-                            Duration="0:0:00.50"/>
+                            Duration="0:0:00.50" />
                     </Storyboard>
                 </VisualState>
                 <VisualState

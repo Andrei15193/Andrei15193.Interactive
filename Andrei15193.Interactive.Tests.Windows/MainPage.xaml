@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Andrei15193.Interactive.Tests.Windows"
     xmlns:i="using:Andrei15193.Interactive"
-    i:Interactive.ViewModel="{Binding}"
+    i:Interactive.VisualState="{Binding State}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
         <SolidColorBrush
