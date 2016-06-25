@@ -57,7 +57,13 @@ namespace Andrei15193.Interactive
                 => _canExecute && (_command?.CanExecute(parameter) ?? true);
 
             public void Execute(object parameter)
-                => _command?.Execute(null);
+            {
+                _command?.Execute(null);
+
+                var frame = Window.Current.Content as Frame;
+                if (frame != null && frame.CanGoBack)
+                    frame.GoBack();
+            }
         }
 
         public static Symbol PrimaryButtonIconDefaultValue { get; } = Symbol.Accept;
@@ -313,12 +319,6 @@ namespace Andrei15193.Interactive
                     Command = PrimaryButtonCommandDefaultValue
                 };
             primaryButton.Command = new AppBatButtonCommand(primaryButton) { Command = PrimaryButtonCommandDefaultValue };
-            primaryButton.Click +=
-                        delegate
-                        {
-                            if (Frame.CanGoBack && (PrimaryButtonCommand?.CanExecute(PrimaryButtonCommandParameter) ?? true))
-                                Frame.GoBack();
-                        };
 
             return primaryButton;
         }
@@ -333,12 +333,6 @@ namespace Andrei15193.Interactive
                     Visibility = SecondaryButtonVisibilityDefaultValue
                 };
             secondaryButton.Command = new AppBatButtonCommand(secondaryButton) { Command = SecondaryButtonCommandDefaultValue };
-            secondaryButton.Click +=
-                delegate
-                {
-                    if (Frame.CanGoBack)
-                        Frame.GoBack();
-                };
 
             return secondaryButton;
         }
