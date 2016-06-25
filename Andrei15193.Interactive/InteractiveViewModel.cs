@@ -464,4 +464,31 @@ namespace Andrei15193.Interactive
 
         protected ObservableCollection<ValidationError> Errors { get; }
     }
+
+    public class CollectionInteractiveViewModel<TItem>
+        : InteractiveViewModel
+    {
+        public CollectionInteractiveViewModel(IEnumerable<TItem> items)
+        {
+            Items = new ObservableCollection<TItem>(items);
+            Errors = new ObservableCollection<ValidationError>();
+            Context = new ViewModelContext<ReadOnlyObservableCollection<TItem>>(
+                new ReadOnlyObservableCollection<TItem>(Items),
+                new ReadOnlyObservableCollection<ValidationError>(Errors));
+        }
+        public CollectionInteractiveViewModel(params TItem[] items)
+            : this(items.AsEnumerable())
+        {
+        }
+        public CollectionInteractiveViewModel()
+            : this(Enumerable.Empty<TItem>())
+        {
+        }
+
+        public ViewModelContext<ReadOnlyObservableCollection<TItem>> Context { get; }
+
+        protected ObservableCollection<TItem> Items { get; }
+
+        protected ObservableCollection<ValidationError> Errors { get; }
+    }
 }

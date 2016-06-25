@@ -53,6 +53,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="CollectionInteractiveViewModelTests.cs" />
     <Compile Include="NavigateCommandTests.cs" />
     <Compile Include="PropertyChangedNotifierTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
