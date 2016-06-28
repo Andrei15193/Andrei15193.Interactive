@@ -5,6 +5,32 @@ using Windows.UI.Xaml.Controls;
 
 namespace Andrei15193.Interactive
 {
+    /// <summary>
+    /// <para>
+    /// A page sharing the same intent as a ContentDialog.
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The ContentDialog control is used as a modal dialog for a page. The problem with it
+    /// is that it actually loads and fills the entirety of the page including the command bar.
+    /// </para>
+    /// <para>
+    /// Because it is a control loading over the page, it does not visually adjust to different
+    /// events, such as the on-screen keyboard. When using a Windows Phone this is problematic as
+    /// no more than two (sometimes even that is too much) input controls can be used and only at
+    /// the top of the ContentDialog. When a user focuses a text control, the on-screen keyboard
+    /// pops up. In case of a <see cref="Page"/> the content is pushed upwards and the user is
+    /// can see what they are typing, with ContentDialog the keyboard does not push it's content
+    /// up and goes over what is shown on the ContentDialog. If the text input is placed where the
+    /// keyboard would be, the keyboard would cover that control and the user would not be able to
+    /// see what they are typing.
+    /// </para>
+    /// <para>
+    /// The specialized <see cref="Page"/> aims to resolve this problem by providing a <see cref="Page"/>
+    /// to use instead of a ContentDialog control.
+    /// </para>
+    /// </remarks>
     public class ContentDialogPage
         : Page
     {
@@ -66,7 +92,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default value of the primary button <see cref="Symbol"/> that is used as icon.
+        /// </summary>
         public static Symbol PrimaryButtonIconDefaultValue { get; } = Symbol.Accept;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the primary button <see cref="Symbol"/> that is used as icon.
+        /// </summary>
         public static readonly DependencyProperty PrimaryButtonIconProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonIcon),
@@ -79,6 +111,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 contentDialogPage.PrimaryButton.Icon = new SymbolIcon(e.NewValue as Symbol? ?? PrimaryButtonIconDefaultValue);
         }
+        /// <summary>
+        /// Gets or sets the primary button <see cref="Symbol"/> to be used as icon.
+        /// </summary>
         public Symbol PrimaryButtonIcon
         {
             get
@@ -91,7 +126,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default value to use as label for the primary button.
+        /// </summary>
         public static string PrimaryButtonTextDefaultValue { get; } = string.Empty;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the value to use as label for the primary button.
+        /// </summary>
         public static readonly DependencyProperty PrimaryButtonTextProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonText),
@@ -104,6 +145,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 contentDialogPage.PrimaryButton.Label = e.NewValue as string ?? PrimaryButtonTextDefaultValue;
         }
+        /// <summary>
+        /// Gets or sets the label of the primary button.
+        /// </summary>
         public string PrimaryButtonText
         {
             get
@@ -116,7 +160,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default value for the primary button <see cref="ICommand"/>.
+        /// </summary>
         public static ICommand PrimaryButtonCommandDefaultValue { get; } = null;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the primary button <see cref="ICommand"/>.
+        /// </summary>
         public static readonly DependencyProperty PrimaryButtonCommandProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonCommand),
@@ -129,6 +179,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 ((AppBatButtonCommand)contentDialogPage.PrimaryButton.Command).Command = e.NewValue as ICommand ?? PrimaryButtonCommandDefaultValue;
         }
+        /// <summary>
+        /// Gets or sets the primary button<see cref="ICommand"/>.
+        /// </summary>
         public ICommand PrimaryButtonCommand
         {
             get
@@ -141,7 +194,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default value of the primary button <see cref="ICommand"/> parameter.
+        /// </summary>
         public static object PrimaryButtonCommandParameterDefaultValue { get; } = null;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the primary button <see cref="ICommand"/> parameter.
+        /// </summary>
         public static readonly DependencyProperty PrimaryButtonCommandParameterProperty =
             DependencyProperty.Register(
                 nameof(PrimaryButtonCommandParameter),
@@ -154,6 +213,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 contentDialogPage.PrimaryButton.CommandParameter = e.NewValue as object ?? PrimaryButtonCommandParameterDefaultValue;
         }
+        /// <summary>
+        /// Gets or sets the parameter of the primary button <see cref="ICommand"/>.
+        /// </summary>
         public object PrimaryButtonCommandParameter
         {
             get
@@ -166,7 +228,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default value of the secondary button <see cref="Symbol"/> that is used as icon.
+        /// </summary>
         public static Symbol SecondaryButtonIconDefaultValue { get; } = Symbol.Cancel;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the secondary button <see cref="Symbol"/> that is used as icon.
+        /// </summary>
         public static readonly DependencyProperty SecondaryButtonIconProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonIcon),
@@ -179,6 +247,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 contentDialogPage.SecondaryButton.Icon = new SymbolIcon(e.NewValue as Symbol? ?? SecondaryButtonIconDefaultValue);
         }
+        /// <summary>
+        /// Gets or sets the secondary button <see cref="Symbol"/> to be used as icon.
+        /// </summary>
         public Symbol SecondaryButtonIcon
         {
             get
@@ -191,7 +262,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The defaul value to use as label for the secondary button.
+        /// </summary>
         public static string SecondaryButtonTextDefaultValue { get; } = string.Empty;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the value to use as label for the secondary button.
+        /// </summary>
         public static readonly DependencyProperty SecondaryButtonTextProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonText),
@@ -204,6 +281,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 contentDialogPage.SecondaryButton.Label = e.NewValue as string ?? SecondaryButtonTextDefaultValue;
         }
+        /// <summary>
+        /// Gets or sets the label of the secondary button.
+        /// </summary>
         public string SecondaryButtonText
         {
             get
@@ -216,7 +296,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default value for the secondary button <see cref="ICommand"/>.
+        /// </summary>
         public static ICommand SecondaryButtonCommandDefaultValue { get; } = null;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the secondary button <see cref="ICommand"/>.
+        /// </summary>
         public static readonly DependencyProperty SecondaryButtonCommandProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonCommand),
@@ -229,6 +315,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 ((AppBatButtonCommand)contentDialogPage.SecondaryButton.Command).Command = e.NewValue as ICommand ?? SecondaryButtonCommandDefaultValue;
         }
+        /// <summary>
+        /// Gets or sets the secondary button <see cref="ICommand"/>.
+        /// </summary>
         public ICommand SecondaryButtonCommand
         {
             get
@@ -241,7 +330,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default value for the secondary button <see cref="ICommand"/> parameter.
+        /// </summary>
         public static object SecondaryButtonCommandParameterDefaultValue { get; } = null;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the secondary button <see cref="ICommand"/> parameter.
+        /// </summary>
         public static readonly DependencyProperty SecondaryButtonCommandParameterProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonCommandParameter),
@@ -254,6 +349,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 contentDialogPage.SecondaryButton.CommandParameter = e.NewValue as object ?? SecondaryButtonCommandParameterDefaultValue;
         }
+        /// <summary>
+        /// Gets or sets the parameter of the secondary button <see cref="ICommand"/>.
+        /// </summary>
         public object SecondaryButtonCommandParameter
         {
             get
@@ -266,7 +364,13 @@ namespace Andrei15193.Interactive
             }
         }
 
+        /// <summary>
+        /// The default <see cref="Visibility"/> of the secondary button.
+        /// </summary>
         public static Visibility SecondaryButtonVisibilityDefaultValue { get; } = Visibility.Collapsed;
+        /// <summary>
+        /// The <see cref="DependencyProperty"/> for the <see cref="Visibility"/> of the secondary button.
+        /// </summary>
         public static readonly DependencyProperty SecondaryButtonVisibilityProperty =
             DependencyProperty.Register(
                 nameof(SecondaryButtonVisibility),
@@ -279,6 +383,9 @@ namespace Andrei15193.Interactive
             if (contentDialogPage != null)
                 contentDialogPage.SecondaryButton.Visibility = (e.NewValue as Visibility?) ?? SecondaryButtonVisibilityDefaultValue;
         }
+        /// <summary>
+        /// Gets or sets the visibility of the secondary button.
+        /// </summary>
         public Visibility SecondaryButtonVisibility
         {
             get
@@ -294,6 +401,9 @@ namespace Andrei15193.Interactive
         private AppBarButton PrimaryButton { get; }
         private AppBarButton SecondaryButton { get; }
 
+        /// <summary>
+        /// Creates a new <see cref="ContentDialogPage"/> instance.
+        /// </summary>
         public ContentDialogPage()
         {
             PrimaryButton = GetPrimaryButton();
