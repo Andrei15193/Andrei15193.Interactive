@@ -28,9 +28,7 @@ namespace Andrei15193.Interactive.Tests.WindowsPhone
 
             BeginTransitionCommand = GetTransitionCommand("State2").BindTo("State1", "State3");
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             TransitionToAsync("State1");
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         public ICommand BeginTransitionCommand { get; }
