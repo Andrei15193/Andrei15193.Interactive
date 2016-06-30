@@ -102,7 +102,7 @@ namespace Andrei15193.Interactive.Validation
             /// it to the current batch.
             /// </summary>
             /// <param name="callback">
-            /// The callback that performs some validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns the builder whose method has been called.
@@ -114,7 +114,7 @@ namespace Andrei15193.Interactive.Validation
             /// it to the current batch.
             /// </summary>
             /// <param name="asyncCallback">
-            /// The callback that performs some asynchronous validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some asynchronous validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns the builder whose method has been called.
@@ -138,7 +138,7 @@ namespace Andrei15193.Interactive.Validation
             /// <see cref="IConstraint{TValue}"/> that was created from the callback.
             /// </summary>
             /// <param name="callback">
-            /// The callback that performs some validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns the builder whose method has been called.
@@ -151,7 +151,7 @@ namespace Andrei15193.Interactive.Validation
             /// callback.
             /// </summary>
             /// <param name="asyncCallback">
-            /// The callback that performs some asynchronous validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some asynchronous validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns the builder whose method has been called.
@@ -174,7 +174,7 @@ namespace Andrei15193.Interactive.Validation
             /// callback and constructs a linear constraint.
             /// </summary>
             /// <param name="callback">
-            /// The callback that performs some validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns an <see cref="IConstraint{TValue}"/> for the linear constraint.
@@ -186,7 +186,7 @@ namespace Andrei15193.Interactive.Validation
             /// async callback and constructs a linear constraint.
             /// </summary>
             /// <param name="asyncCallback">
-            /// The callback that performs some asynchronous validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some asynchronous validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns an <see cref="IConstraint{TValue}"/> for the linear constraint.
@@ -211,7 +211,7 @@ namespace Andrei15193.Interactive.Validation
             /// created from the provided callback and constructs a linear constraint.
             /// </summary>
             /// <param name="callback">
-            /// The callback that performs some validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns an <see cref="IConstraint{TValue}"/> for the linear constraint.
@@ -224,7 +224,7 @@ namespace Andrei15193.Interactive.Validation
             /// constraint.
             /// </summary>
             /// <param name="asyncCallback">
-            /// The callback that performs some asynchronous validation on the <paramref name="TValue"/> instance.
+            /// The callback that performs some asynchronous validation on the <typeparamref name="TValue"/> instance.
             /// </param>
             /// <returns>
             /// Returns an <see cref="IConstraint{TValue}"/> for the linear constraint.
@@ -259,7 +259,7 @@ namespace Andrei15193.Interactive.Validation
         /// The type of the object that will be checked.
         /// </typeparam>
         /// <param name="callback">
-        /// The callback that performs some validation on the <paramref name="TValue"/> instance.
+        /// The callback that performs some validation on the <typeparamref name="TValue"/> instance.
         /// </param>
         /// <returns>
         /// Returns a <see cref="ILinearConstraintBuilder{TValue}"/> that can be used to create a
@@ -277,7 +277,7 @@ namespace Andrei15193.Interactive.Validation
         /// The type of the object that will be checked.
         /// </typeparam>
         /// <param name="asyncCallback">
-        /// The callback that performs some asynchornous validation on the <paramref name="TValue"/> instance.
+        /// The callback that performs some asynchornous validation on the <typeparamref name="TValue"/> instance.
         /// </param>
         /// <returns>
         /// Returns a <see cref="ILinearConstraintBuilder{TValue}"/> that can be used to create a
