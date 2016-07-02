@@ -64,6 +64,7 @@
   <ItemGroup>
     <None Include="Andrei15193.Interactive.nuspec" />
     <None Include="Andrei15193.Interactive.pfx" />
+    <None Include="license.md" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
