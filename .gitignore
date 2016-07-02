@@ -169,6 +169,7 @@ ClientBin/
 *~
 *.dbmdl
 *.dbproj.schemaview
+*.snk
 *.pfx
 *.publishsettings
 node_modules/
