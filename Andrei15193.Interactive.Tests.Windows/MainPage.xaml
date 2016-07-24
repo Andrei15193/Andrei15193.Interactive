@@ -9,6 +9,9 @@
         <SolidColorBrush
             x:Name="Brush"
             Color="White" />
+
+        <i:DynamicPropertyEquatableConverter
+            x:Name="DynamicPropertyEquatableConverter" />
     </Page.Resources>
 
     <Page.DataContext>
@@ -18,7 +21,6 @@
     <Grid
         i:Interactive.VisualState="{Binding State}">
         <VisualStateManager.VisualStateGroups>
-
             <VisualStateGroup>
                 <VisualState
                     x:Name="State1">
@@ -63,9 +65,21 @@
                 Text="{Binding State}" />
 
             <Rectangle
-                Width="100"
-                Height="100"
+                Width="300"
+                Height="200"
                 Fill="{StaticResource Brush}" />
+
+            <ComboBox
+                ItemsSource="{Binding Items, Converter={StaticResource DynamicPropertyEquatableConverter}, ConverterParameter=Id}"
+                SelectedItem="{Binding SelectedItem, Converter={StaticResource DynamicPropertyEquatableConverter}, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock
+                            DataContext="{Binding Value}"
+                            Text="{Binding Text}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </StackPanel>
     </Grid>
     <Page.BottomAppBar>

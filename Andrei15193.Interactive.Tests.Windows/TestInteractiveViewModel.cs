@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Andrei15193.Interactive.Tests.Windows
@@ -6,8 +9,25 @@ namespace Andrei15193.Interactive.Tests.Windows
     public class TestInteractiveViewModel
         : InteractiveViewModel
     {
+        private TestItem _selectedItem;
+        private readonly ObservableCollection<TestItem> _items;
+
         public TestInteractiveViewModel()
         {
+            _selectedItem = new TestItem
+            {
+                Id = new Random().Next(0, 20),
+                Text = "Selected item"
+            };
+
+            _items = new ObservableCollection<TestItem>(from itemNumber in Enumerable.Range(0, 20)
+                                                        select new TestItem
+                                                        {
+                                                            Id = itemNumber,
+                                                            Text = $"Item #{itemNumber}"
+                                                        });
+            Items = new ReadOnlyObservableCollection<TestItem>(_items);
+
             CreateActionState(
                 "State2",
                 async context =>
@@ -25,5 +45,20 @@ namespace Andrei15193.Interactive.Tests.Windows
         }
 
         public ICommand BeginTransitionCommand { get; }
+
+        public TestItem SelectedItem
+        {
+            get
+            {
+                return _selectedItem;
+            }
+            set
+            {
+                _selectedItem = value;
+                NotifyPropertyChanged(nameof(SelectedItem));
+            }
+        }
+
+        public ReadOnlyObservableCollection<TestItem> Items { get; }
     }
 }
