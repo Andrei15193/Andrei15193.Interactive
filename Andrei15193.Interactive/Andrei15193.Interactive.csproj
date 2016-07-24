@@ -46,6 +46,11 @@
     <Compile Include="ActionStateContext.cs" />
     <Compile Include="CollectionInteractiveViewModel.cs" />
     <Compile Include="ContentDialogPage.cs" />
+    <Compile Include="DynamicPropertyEquatable.cs" />
+    <Compile Include="DynamicPropertyEquatableConverter.cs" />
+    <Compile Include="IReadOnlyObservableCollection.cs" />
+    <Compile Include="ObservableCollectionExtensions.cs" />
+    <Compile Include="ProjectedObservableCollection.cs" />
     <Compile Include="Validation\AnyConstraint.cs" />
     <Compile Include="Validation\Constraint.cs" />
     <Compile Include="Validation\Constraints.cs" />

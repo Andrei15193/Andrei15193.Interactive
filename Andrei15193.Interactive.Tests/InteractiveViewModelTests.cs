@@ -519,17 +519,20 @@ namespace Andrei15193.Interactive.Tests
             await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var completeActionEvent = new ManualResetEventSlim(false))
+            using (var reachedActionStateEvent = new ManualResetEventSlim(false))
             {
                 InteractiveViewModel.CreateActionState(
                     ActionState,
                     (context, cancellationToken) =>
                     {
+                        reachedActionStateEvent.Set();
                         context.NextState = DestinationState;
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
 
                 var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
+                await Task.Factory.StartNew(reachedActionStateEvent.Wait);
                 Assert.IsTrue(InteractiveViewModel.CancelCommand.CanExecute(null));
 
                 completeActionEvent.Set();

@@ -9,6 +9,9 @@
         <SolidColorBrush
             x:Name="Brush"
             Color="White" />
+
+        <i:DynamicPropertyEquatableConverter
+            x:Name="DynamicPropertyEquatableConverter" />
     </Page.Resources>
     <Page.DataContext>
         <local:TestInteractiveViewModel />
@@ -56,8 +59,8 @@
                 TextAlignment="Center"
                 Text="{Binding State}" />
             <Rectangle
-                Width="100"
-                Height="100"
+                Width="200"
+                Height="150"
                 Fill="{StaticResource Brush}" />
             <ItemsControl
                 ItemsSource="{Binding Context.Errors}">
@@ -70,6 +73,18 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
+            <ComboBox
+                ItemsSource="{Binding Items, Converter={StaticResource DynamicPropertyEquatableConverter}, ConverterParameter=Id}"
+                SelectedItem="{Binding SelectedItem, Converter={StaticResource DynamicPropertyEquatableConverter}, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock
+                            DataContext="{Binding Value}"
+                            Text="{Binding Text}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </StackPanel>
     </Grid>
     <Page.BottomAppBar>

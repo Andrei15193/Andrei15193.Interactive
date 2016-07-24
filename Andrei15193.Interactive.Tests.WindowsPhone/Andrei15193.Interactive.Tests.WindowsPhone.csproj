@@ -90,6 +90,7 @@
       <DependentUpon>ContentDialogPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="TestInteractiveViewModel.cs" />
+    <Compile Include="TestItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
