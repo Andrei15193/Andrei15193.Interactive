@@ -1352,5 +1352,66 @@ namespace Andrei15193.Interactive.Tests
                         DestinationState
                     }));
         }
+
+        [TestMethod]
+        public async Task TestAwaitingViewModelTransitionsCompletesAfterTheViewModelHasReachedAQuietState()
+        {
+            using (var compelteActionStateEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = FinalState;
+                        await Task.Factory.StartNew(compelteActionStateEvent.Wait);
+                    });
+
+                var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                var transition = InteractiveViewModel.Transition;
+
+                Assert.IsFalse(transition.IsCompleted);
+
+                compelteActionStateEvent.Set();
+
+                await Task.WhenAll(actionStateTransitionTask, transition);
+            }
+        }
+
+        [TestMethod]
+        public async Task TestAwaitingViewModelTransitionTaskProvidesTheNameOfTheStateThatTheViewModelHasFinallyTransitionedTo()
+        {
+            using (var compelteActionStateEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async context =>
+                    {
+                        context.NextState = FinalState;
+                        await Task.Factory.StartNew(compelteActionStateEvent.Wait);
+                    });
+
+                var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
+                var transition = InteractiveViewModel.Transition;
+
+                compelteActionStateEvent.Set();
+
+                await Task.WhenAll(actionStateTransitionTask, transition);
+                var result = await transition;
+
+                Assert.AreEqual(InteractiveViewModel.State, result);
+            }
+        }
+
+        [TestMethod]
+        public async Task TestAwaitingViewModelTransitionTaskProvidesTheNameOfTheStateThatTheViewModelHasFinallyTransitionedToEvenWhenPerformingSubsequentTransitions()
+        {
+            await InteractiveViewModel.TransitionToAsync(ActionState);
+            var transition = InteractiveViewModel.Transition;
+
+            await InteractiveViewModel.TransitionToAsync(FollowUpActionState);
+
+            var result = await transition;
+            Assert.AreEqual(ActionState, result);
+        }
     }
 }

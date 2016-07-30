@@ -417,7 +417,7 @@ namespace Andrei15193.Interactive
         private string _state = null;
         private bool _isInActionState = false;
         private string _lastEnqueuedState = null;
-        private Task _lastTransitionTask = Task.FromResult<object>(null);
+        private Task<string> _lastTransitionTask = Task.FromResult<string>(null);
         private readonly CancellationCommand _cancelCommand = new CancellationCommand();
         private readonly IDictionary<string, ViewModelState> _states = new Dictionary<string, ViewModelState>(StateStringComparer);
 
@@ -446,6 +446,27 @@ namespace Andrei15193.Interactive
                 NotifyPropertyChanged(nameof(State));
             }
         }
+
+        /// <summary>
+        /// Gets a <see cref="Task{String}"/> that represents the current transition. The
+        /// <see cref="Task{String}"/> will complete once the <see cref="InteractiveViewModel"/>
+        /// has reached a quiet state and the <see cref="Task{String}"/> itself will provide
+        /// the name of the state.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is useful to await transitions on an <see cref="InteractiveViewModel"/>
+        /// when the awaiting object does not have access to the <see cref="Task{String}"/>
+        /// returned by one of the transition methods.
+        /// </para>
+        /// <para>
+        /// Sometimes it is impossible as the <see cref="InteractiveViewModel"/> may
+        /// have an action state as the initial state, thus the result of the transition
+        /// is lost unless it is captured and exposed by user code.
+        /// </para>
+        /// </remarks>
+        public Task<string> Transition
+            => _lastTransitionTask;
 
         /// <summary>
         /// An <see cref="ICommand"/> that can be used to cancel the current asynchronous operation.
@@ -514,8 +535,8 @@ namespace Andrei15193.Interactive
         /// when the <see cref="InteractiveViewModel"/> will finally transition into a
         /// quiet state or become faulted or canceled.
         /// </returns>
-        protected Task TransitionToAsync(string state, object parameter)
-            => _lastTransitionTask = new Func<Task>(
+        protected Task<string> TransitionToAsync(string state, object parameter)
+            => _lastTransitionTask = new Func<Task<string>>(
                 async delegate
                 {
                     if (state == null)
@@ -560,6 +581,7 @@ namespace Andrei15193.Interactive
                     }
 
                     State = nextState;
+                    return nextState;
                 }).Invoke();
         /// <summary>
         /// Transitions the <see cref="InteractiveViewModel"/> to the given <paramref name="state"/>.
@@ -573,7 +595,7 @@ namespace Andrei15193.Interactive
         /// when the <see cref="InteractiveViewModel"/> will finally transition into a
         /// quiet state or become faulted or canceled.
         /// </returns>
-        protected Task TransitionToAsync(string state)
+        protected Task<string> TransitionToAsync(string state)
             => TransitionToAsync(state, null);
 
         /// <summary>
@@ -599,7 +621,7 @@ namespace Andrei15193.Interactive
         /// into a quiet state or become faulted or canceled.
         /// </para>
         /// </returns>
-        protected Task EnqueueTransitionToAsync(string state, object parameter)
+        protected Task<string> EnqueueTransitionToAsync(string state, object parameter)
         {
             if (state == null)
                 throw new ArgumentNullException(nameof(state));
@@ -613,12 +635,12 @@ namespace Andrei15193.Interactive
             {
                 var previousTransitionTask = _lastTransitionTask;
                 _lastEnqueuedState = state;
-                _lastTransitionTask = new Func<Task>(
+                _lastTransitionTask = new Func<Task<string>>(
                     async delegate
                     {
                         await Task.Yield();
                         await previousTransitionTask;
-                        await TransitionToAsync(state, parameter);
+                        return await TransitionToAsync(state, parameter);
                     }).Invoke();
             }
 
@@ -644,7 +666,7 @@ namespace Andrei15193.Interactive
         /// into a quiet state or become faulted or canceled.
         /// </para>
         /// </returns>
-        protected Task EnqueueTransitionToAsync(string state)
+        protected Task<string> EnqueueTransitionToAsync(string state)
             => EnqueueTransitionToAsync(state, null);
 
         /// <summary>
