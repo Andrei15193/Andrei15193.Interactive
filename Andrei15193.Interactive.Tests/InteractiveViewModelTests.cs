@@ -56,9 +56,13 @@ namespace Andrei15193.Interactive.Tests
 
             new public ICommand GetTransitionCommand(string destinationState)
                 => base.GetTransitionCommand(destinationState);
+            [Obsolete(@"Error handling is no longer supported through a separate callback. Exceptions must be treated in callbacks associated with action states.
+
+Allowing InteractiveViewModels to not transition to any state (because of an uncaught exception) and remain ""stuck"" in an action state leads to ""partial"" transitions and inconsistencies when using commands to trigger transitions.")]
             new public ICommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
                 => base.GetTransitionCommand(destinationState, errorHandler);
 
+            [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
             public ICommand GetTransitionCommand(string destinationState, ManualResetEventSlim completionEvent)
             {
                 var transitionCommand = base.GetTransitionCommand(destinationState);
@@ -70,6 +74,7 @@ namespace Andrei15193.Interactive.Tests
 
                 return transitionCommand;
             }
+            [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
             public ICommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler, ManualResetEventSlim completionEvent)
             {
                 var transitionCommand = base.GetTransitionCommand(destinationState, errorHandler);
@@ -84,31 +89,11 @@ namespace Andrei15193.Interactive.Tests
 
             new public ICommand GetEnqueuingTransitionCommand(string destinationState)
                 => base.GetEnqueuingTransitionCommand(destinationState);
+            [Obsolete(@"Error handling is no longer supported through a separate callback. Exceptions must be treated in callbacks associated with action states.
+
+Allowing InteractiveViewModels to not transition to any state (because of an uncaught exception) and remain ""stuck"" in an action state leads to ""partial"" transitions and inconsistencies when using commands to trigger transitions.")]
             new public ICommand GetEnqueuingTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
                 => base.GetEnqueuingTransitionCommand(destinationState, errorHandler);
-
-            public ICommand GetEnqueuingTransitionCommand(string destinationState, ManualResetEventSlim completionEvent)
-            {
-                var enqueuingTransitionCommand = base.GetEnqueuingTransitionCommand(destinationState);
-                enqueuingTransitionCommand.ExecuteCompleted +=
-                    delegate
-                    {
-                        completionEvent.Set();
-                    };
-
-                return enqueuingTransitionCommand;
-            }
-            public ICommand GetEnqueuingTransitionCommand(string destinationState, Action<ErrorContext> errorHandler, ManualResetEventSlim completionEvent)
-            {
-                var enqueuingTransitionCommand = base.GetEnqueuingTransitionCommand(destinationState, errorHandler);
-                enqueuingTransitionCommand.ExecuteCompleted +=
-                    delegate
-                    {
-                        completionEvent.Set();
-                    };
-
-                return enqueuingTransitionCommand;
-            }
         }
 
         private sealed class BoundMockInteractiveViewModel
@@ -816,6 +801,7 @@ namespace Andrei15193.Interactive.Tests
         }
 
         [TestMethod]
+        [Obsolete("Tests obsolete functionality. While it is still in the library it must work properly.")]
         public async Task TestTransitioningToAFaultingStateWithTransitionCommandWillGoThroughTheErrorHandler()
         {
             using (var transitionCompletedEvent = new ManualResetEventSlim(false))
@@ -845,6 +831,7 @@ namespace Andrei15193.Interactive.Tests
         }
 
         [TestMethod]
+        [Obsolete("Tests obsolete functionality. While it is still in the library it must work properly.")]
         public async Task TestTransitioningFromAFaultedStateToAnActionStateThroughTheErrorHandler()
         {
             var stateChanges = new List<string>();
@@ -893,6 +880,7 @@ namespace Andrei15193.Interactive.Tests
         }
 
         [TestMethod]
+        [Obsolete("Tests obsolete functionality. While it is still in the library it must work properly.")]
         public async Task TestExceptionThatIsThrownIsRetrievedThroughErrorContext()
         {
             var expectedException = new Exception();
@@ -925,6 +913,7 @@ namespace Andrei15193.Interactive.Tests
         }
 
         [TestMethod]
+        [Obsolete("Tests obsolete functionality. While it is still in the library it must work properly.")]
         public async Task TestCancelingAnActionStateSetsIsCanceledAsTrueOnErrorContext()
         {
             var isCanceled = false;
@@ -1192,28 +1181,26 @@ namespace Andrei15193.Interactive.Tests
         [TestMethod]
         public async Task TestUsingTransitionCommandToTransitioningWithParameterSetsItToActionContext()
         {
-            using (var completeActionStateEvent = new ManualResetEventSlim(false))
-            {
-                var parameter = new object();
-                object actualParameter = null;
-                InteractiveViewModel.CreateActionState(
-                    ActionState,
-                    context =>
-                    {
-                        context.NextState = DestinationState;
-                        actualParameter = context.Parameter;
-                    });
-                var transitionCommand = InteractiveViewModel.GetTransitionCommand(ActionState, completeActionStateEvent);
-                transitionCommand.Execute(parameter);
+            var parameter = new object();
+            object actualParameter = null;
+            InteractiveViewModel.CreateActionState(
+                ActionState,
+                context =>
+                {
+                    context.NextState = DestinationState;
+                    actualParameter = context.Parameter;
+                });
+            var transitionCommand = InteractiveViewModel.GetTransitionCommand(ActionState);
+            transitionCommand.Execute(parameter);
 
-                await Task.Factory.StartNew(completeActionStateEvent.Wait);
+            await InteractiveViewModel.Transition;
 
-                Assert.AreSame(parameter, actualParameter);
-            }
+            Assert.AreSame(parameter, actualParameter);
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
+        [Obsolete("Tests obsolete functionality. While it is still in the library it must work properly.")]
         public async Task TestExecutingTransitionCommandWhileInActionStateThrowsException()
         {
             Exception exception = null;
@@ -1240,6 +1227,7 @@ namespace Andrei15193.Interactive.Tests
         }
 
         [TestMethod]
+        [Obsolete("Tests obsolete functionality. While it is still in the library it must work properly.")]
         public async Task TestErrorContextHasCanTransitionSetToFalseWhenTheViewModelIsInAnActiveState()
         {
             var canTransition = true;
@@ -1253,7 +1241,7 @@ namespace Andrei15193.Interactive.Tests
                         await Task.Factory.StartNew(continueActionStateEvent.Wait);
                     });
 
-                var transitionCommand = InteractiveViewModel.GetTransitionCommand(FinalState, errorContext => canTransition = errorContext.CanTransition);
+                var transitionCommand = InteractiveViewModel.GetTransitionCommand(FinalState, context => canTransition = context.CanTransition);
                 var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
                 transitionCommand.Execute(null);
@@ -1265,10 +1253,10 @@ namespace Andrei15193.Interactive.Tests
         }
 
         [TestMethod]
+        [Obsolete("Tests obsolete functionality. While it is still in the library it must work properly.")]
         public async Task TestExceptionIsNotThrownWhenUsingEnqueuingTransitionCommandAndTheViewModelIsInAnActiveState()
         {
             Exception exception = null;
-            using (var commandExecutedEvent = new ManualResetEventSlim(false))
             using (var continueActionStateEvent = new ManualResetEventSlim(false))
             {
                 InteractiveViewModel.CreateActionState(
@@ -1279,14 +1267,16 @@ namespace Andrei15193.Interactive.Tests
                         await Task.Factory.StartNew(continueActionStateEvent.Wait);
                     });
 
-                var enqueuedTransitionCommand = InteractiveViewModel.GetEnqueuingTransitionCommand(FinalState, errorContext => exception = errorContext.Exception, commandExecutedEvent);
+                var enqueuedTransitionCommand = InteractiveViewModel.GetEnqueuingTransitionCommand(
+                    FinalState,
+                    context => exception = context.Exception);
                 var transitionToActionStateTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
                 enqueuedTransitionCommand.Execute(null);
                 continueActionStateEvent.Set();
                 await transitionToActionStateTask;
 
-                await Task.Factory.StartNew(commandExecutedEvent.Wait);
+                await InteractiveViewModel.Transition;
             }
 
             Assert.IsNull(exception);

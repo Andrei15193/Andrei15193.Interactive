@@ -172,10 +172,141 @@ namespace Andrei15193.Interactive
         protected sealed class TransitionCommand
             : ICommand
         {
-            private readonly InteractiveViewModel _interactiveViewModel;
-            private readonly string _destinationState;
-            private readonly Action<ErrorContext> _errorHandler;
+            private interface ITransitionCommand
+                : ICommand
+            {
+                [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+                event EventHandler ExecuteCompleted;
 
+                ICommand BindTo(IEnumerable<string> states);
+
+                ICommand BindTo(params string[] states);
+            }
+
+            private class CurrentTransitionCommand
+                : ITransitionCommand
+            {
+                private readonly InteractiveViewModel _interactiveViewModel;
+                private readonly string _destinationState;
+
+                internal CurrentTransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState)
+                {
+                    if (interactiveViewModel == null)
+                        throw new ArgumentNullException(nameof(interactiveViewModel));
+                    if (destinationState == null)
+                        throw new ArgumentNullException(nameof(destinationState));
+
+                    _interactiveViewModel = interactiveViewModel;
+                    _destinationState = destinationState;
+                }
+
+                event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+
+                [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+                public event EventHandler ExecuteCompleted;
+
+                public bool CanExecute(object parameter)
+                    => true;
+
+                public async void Execute(object parameter)
+                {
+                    await _interactiveViewModel.TransitionToAsync(_destinationState, parameter);
+                    ExecuteCompleted?.Invoke(this, EventArgs.Empty);
+                }
+
+                public ICommand BindTo(IEnumerable<string> states)
+                    => _interactiveViewModel.BindCommand(this, states);
+
+                public ICommand BindTo(params string[] states)
+                    => BindTo(states.AsEnumerable());
+            }
+
+            [Obsolete("This is an obsolete implementation. Use CurrentTransitionCommand instead.")]
+            private class ObsoleteTransitionCommand
+                : ITransitionCommand
+            {
+                private readonly InteractiveViewModel _interactiveViewModel;
+                private readonly string _destinationState;
+                private readonly Action<ErrorContext> _errorHandler;
+
+                internal ObsoleteTransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState, Action<ErrorContext> errorHandler)
+                {
+                    if (interactiveViewModel == null)
+                        throw new ArgumentNullException(nameof(interactiveViewModel));
+                    if (destinationState == null)
+                        throw new ArgumentNullException(nameof(destinationState));
+
+                    _interactiveViewModel = interactiveViewModel;
+                    _destinationState = destinationState;
+                    _errorHandler = errorHandler;
+                }
+
+                event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+
+                [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+                public event EventHandler ExecuteCompleted;
+
+                public bool CanExecute(object parameter)
+                    => true;
+
+                public async void Execute(object parameter)
+                {
+                    var destinationState = _destinationState;
+                    while (destinationState != null)
+                    {
+                        var canTransitionWhenFaulted = !_interactiveViewModel._isInActionState;
+                        var transitionTask = _interactiveViewModel.TransitionToAsync(destinationState, parameter);
+                        try
+                        {
+                            await transitionTask;
+                            destinationState = null;
+                        }
+                        catch
+                        {
+                            if (_errorHandler == null)
+                                throw new InvalidOperationException("Unhandled exception by user code.", transitionTask.Exception);
+
+                            ErrorContext errorContext;
+                            if (transitionTask.IsCanceled)
+                                errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state);
+                            else
+                                errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, canTransitionWhenFaulted, transitionTask.Exception);
+
+                            _errorHandler(errorContext);
+                            if (!errorContext.CanTransition)
+                                destinationState = null;
+                            else if (errorContext.NextState == null)
+                                throw new InvalidOperationException("Cannot transition to 'null' state.");
+                            else
+                                destinationState = errorContext.NextState;
+                        }
+                    }
+
+                    ExecuteCompleted?.Invoke(this, EventArgs.Empty);
+                }
+
+                public ICommand BindTo(IEnumerable<string> states)
+                    => _interactiveViewModel.BindCommand(this, states);
+
+                public ICommand BindTo(params string[] states)
+                    => BindTo(states.AsEnumerable());
+            }
+
+            private readonly ITransitionCommand _transitionCommand;
+
+            /// <summary>
+            /// Creates a new <see cref="TransitionCommand"/> instance.
+            /// </summary>
+            /// <param name="interactiveViewModel">
+            /// The <see cref="InteractiveViewModel"/> unto which to trigger a transition.
+            /// </param>
+            /// <param name="destinationState">
+            /// The name of the state to transition to.
+            /// </param>
+            internal TransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState)
+            {
+                _transitionCommand = new CurrentTransitionCommand(interactiveViewModel, destinationState);
+            }
             /// <summary>
             /// Creates a new <see cref="TransitionCommand"/> instance.
             /// </summary>
@@ -189,24 +320,39 @@ namespace Andrei15193.Interactive
             /// An optional error handler callback that will be invoked in case the transition
             /// becomes faulted or canceled.
             /// </param>
+            [Obsolete("This constructor takes an error handler callback which is no longer supported. Consider using an constructor overload that does not require an error handler callback.")]
             internal TransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState, Action<ErrorContext> errorHandler)
             {
-                if (interactiveViewModel == null)
-                    throw new ArgumentNullException(nameof(interactiveViewModel));
-                if (destinationState == null)
-                    throw new ArgumentNullException(nameof(destinationState));
-
-                _interactiveViewModel = interactiveViewModel;
-                _destinationState = destinationState;
-                _errorHandler = errorHandler;
+                _transitionCommand = new ObsoleteTransitionCommand(interactiveViewModel, destinationState, errorHandler);
             }
 
-            event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+            event EventHandler ICommand.CanExecuteChanged
+            {
+                add
+                {
+                    _transitionCommand.CanExecuteChanged += value;
+                }
+                remove
+                {
+                    _transitionCommand.CanExecuteChanged -= value;
+                }
+            }
 
             /// <summary>
             /// Occurs when the transition completes.
             /// </summary>
-            public event EventHandler ExecuteCompleted;
+            [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+            public event EventHandler ExecuteCompleted
+            {
+                add
+                {
+                    _transitionCommand.ExecuteCompleted += value;
+                }
+                remove
+                {
+                    _transitionCommand.ExecuteCompleted -= value;
+                }
+            }
 
             /// <summary>
             /// Checks whether the command can be executed with the provided <paramref name="parameter"/>.
@@ -218,7 +364,7 @@ namespace Andrei15193.Interactive
             /// Returns true if the command can execute; otherwise false.
             /// </returns>
             public bool CanExecute(object parameter)
-                => true;
+                => _transitionCommand.CanExecute(parameter);
 
             /// <summary>
             /// Triggers a state transition on the underlying <see cref="InteractiveViewModel"/>.
@@ -226,41 +372,8 @@ namespace Andrei15193.Interactive
             /// <param name="parameter">
             /// An optional parameter to provide additional data for the command to process.
             /// </param>
-            public async void Execute(object parameter)
-            {
-                var destinationState = _destinationState;
-                while (destinationState != null)
-                {
-                    var canTransitionWhenFaulted = !_interactiveViewModel._isInActionState;
-                    var transitionTask = _interactiveViewModel.TransitionToAsync(destinationState, parameter);
-                    try
-                    {
-                        await transitionTask;
-                        destinationState = null;
-                    }
-                    catch
-                    {
-                        if (_errorHandler == null)
-                            throw new InvalidOperationException("Unhandled exception by user code.", transitionTask.Exception);
-
-                        ErrorContext errorContext;
-                        if (transitionTask.IsCanceled)
-                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state);
-                        else
-                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, canTransitionWhenFaulted, transitionTask.Exception);
-
-                        _errorHandler(errorContext);
-                        if (!errorContext.CanTransition)
-                            destinationState = null;
-                        else if (errorContext.NextState == null)
-                            throw new InvalidOperationException("Cannot transition to 'null' state.");
-                        else
-                            destinationState = errorContext.NextState;
-                    }
-                }
-
-                ExecuteCompleted?.Invoke(this, EventArgs.Empty);
-            }
+            public void Execute(object parameter)
+                => _transitionCommand.Execute(parameter);
 
             /// <summary>
             /// Binds the command to the specified states.
@@ -274,7 +387,7 @@ namespace Andrei15193.Interactive
             /// <paramref name="states"/>.
             /// </returns>
             public ICommand BindTo(IEnumerable<string> states)
-                => _interactiveViewModel.BindCommand(this, states);
+                => _transitionCommand.BindTo(states);
 
             /// <summary>
             /// Binds the command to the specified states.
@@ -288,7 +401,7 @@ namespace Andrei15193.Interactive
             /// <paramref name="states"/>.
             /// </returns>
             public ICommand BindTo(params string[] states)
-                => BindTo(states.AsEnumerable());
+                => _transitionCommand.BindTo(states);
         }
 
         /// <summary>
@@ -298,9 +411,149 @@ namespace Andrei15193.Interactive
         protected sealed class EnqueuingTransitionCommand
             : ICommand
         {
-            private readonly InteractiveViewModel _interactiveViewModel;
-            private readonly string _destinationState;
-            private readonly Action<ErrorContext> _errorHandler;
+            private interface IEnqueuingTransitionCommand
+                : ICommand
+            {
+                [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+                event EventHandler ExecuteCompleted;
+
+                ICommand BindTo(IEnumerable<string> states);
+
+                ICommand BindTo(params string[] states);
+            }
+
+            private class CurrentEnqueuingTransitionCommand
+                : IEnqueuingTransitionCommand
+            {
+                private readonly InteractiveViewModel _interactiveViewModel;
+                private readonly string _destinationState;
+
+                internal CurrentEnqueuingTransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState)
+                {
+                    if (interactiveViewModel == null)
+                        throw new ArgumentNullException(nameof(interactiveViewModel));
+                    if (destinationState == null)
+                        throw new ArgumentNullException(nameof(destinationState));
+
+                    _interactiveViewModel = interactiveViewModel;
+                    _destinationState = destinationState;
+                }
+
+                event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+
+                /// <summary>
+                /// Occurs when the transition completes.
+                /// </summary>
+                [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+                public event EventHandler ExecuteCompleted;
+
+                public bool CanExecute(object parameter)
+                    => true;
+
+                public async void Execute(object parameter)
+                {
+                    await _interactiveViewModel.EnqueueTransitionToAsync(_destinationState, parameter);
+                    ExecuteCompleted?.Invoke(this, EventArgs.Empty);
+                }
+
+                public ICommand BindTo(IEnumerable<string> states)
+                    => _interactiveViewModel.BindCommand(this, states);
+
+                public ICommand BindTo(params string[] states)
+                    => BindTo(states.AsEnumerable());
+            }
+
+            [Obsolete("This is an obsolete implementation. Use CurrentEnqueuingTransitionCommand instead.")]
+            private sealed class ObsoleteEnqueuingTransitionCommand
+                : IEnqueuingTransitionCommand
+            {
+                private readonly InteractiveViewModel _interactiveViewModel;
+                private readonly string _destinationState;
+                private readonly Action<ErrorContext> _errorHandler;
+
+                internal ObsoleteEnqueuingTransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState, Action<ErrorContext> errorHandler)
+                {
+                    if (interactiveViewModel == null)
+                        throw new ArgumentNullException(nameof(interactiveViewModel));
+                    if (destinationState == null)
+                        throw new ArgumentNullException(nameof(destinationState));
+
+                    _interactiveViewModel = interactiveViewModel;
+                    _destinationState = destinationState;
+                    _errorHandler = errorHandler;
+                }
+
+                event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+
+                /// <summary>
+                /// Occurs when the transition completes.
+                /// </summary>
+                [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+                public event EventHandler ExecuteCompleted;
+
+                public bool CanExecute(object parameter)
+                    => true;
+
+                public async void Execute(object parameter)
+                {
+                    var destinationState = _destinationState;
+                    while (destinationState != null)
+                    {
+                        var enqueuedTransitionTask = _interactiveViewModel.EnqueueTransitionToAsync(destinationState, parameter);
+                        try
+                        {
+                            await enqueuedTransitionTask;
+                            destinationState = null;
+                        }
+                        catch
+                        {
+                            if (_errorHandler == null)
+                                throw new InvalidOperationException("Unhandled exception by user code.", enqueuedTransitionTask.Exception);
+
+                            ErrorContext errorContext;
+                            if (enqueuedTransitionTask.IsCanceled)
+                                errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state);
+                            else
+                                errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, false, enqueuedTransitionTask.Exception);
+
+                            _errorHandler(errorContext);
+                            if (errorContext.NextState == null)
+                                throw new InvalidOperationException("Cannot transition to 'null' state.");
+
+                            destinationState = errorContext.NextState;
+                        }
+                    }
+
+                    ExecuteCompleted?.Invoke(this, EventArgs.Empty);
+                }
+
+                public ICommand BindTo(IEnumerable<string> states)
+                    => _interactiveViewModel.BindCommand(this, states);
+
+                public ICommand BindTo(params string[] states)
+                    => BindTo(states.AsEnumerable());
+            }
+
+            private readonly IEnqueuingTransitionCommand _enqueuingTransitionCommand;
+
+            /// <summary>
+            /// Creates a new <see cref="EnqueuingTransitionCommand"/> instance.
+            /// </summary>
+            /// <param name="interactiveViewModel">
+            /// The <see cref="InteractiveViewModel"/> unto which to enqueue a transition.
+            /// </param>
+            /// <param name="destinationState">
+            /// The name of the state to enqueue the transition to.
+            /// </param>
+            internal EnqueuingTransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState)
+            {
+                if (interactiveViewModel == null)
+                    throw new ArgumentNullException(nameof(interactiveViewModel));
+                if (destinationState == null)
+                    throw new ArgumentNullException(nameof(destinationState));
+
+                _enqueuingTransitionCommand = new CurrentEnqueuingTransitionCommand(interactiveViewModel, destinationState);
+            }
 
             /// <summary>
             /// Creates a new <see cref="EnqueuingTransitionCommand"/> instance.
@@ -315,6 +568,7 @@ namespace Andrei15193.Interactive
             /// An optional error handler callback that will be invoked in case the transition
             /// becomes faulted or canceled.
             /// </param>
+            [Obsolete("This constructor takes an error handler callback which is no longer supported. Consider using an constructor overload that does not require an error handler callback.")]
             internal EnqueuingTransitionCommand(InteractiveViewModel interactiveViewModel, string destinationState, Action<ErrorContext> errorHandler)
             {
                 if (interactiveViewModel == null)
@@ -322,17 +576,36 @@ namespace Andrei15193.Interactive
                 if (destinationState == null)
                     throw new ArgumentNullException(nameof(destinationState));
 
-                _interactiveViewModel = interactiveViewModel;
-                _destinationState = destinationState;
-                _errorHandler = errorHandler;
+                _enqueuingTransitionCommand = new ObsoleteEnqueuingTransitionCommand(interactiveViewModel, destinationState, errorHandler);
             }
 
-            event EventHandler ICommand.CanExecuteChanged { add { } remove { } }
+            event EventHandler ICommand.CanExecuteChanged
+            {
+                add
+                {
+                    _enqueuingTransitionCommand.CanExecuteChanged += value;
+                }
+                remove
+                {
+                    _enqueuingTransitionCommand.CanExecuteChanged -= value;
+                }
+            }
 
             /// <summary>
             /// Occurs when the transition completes.
             /// </summary>
-            public event EventHandler ExecuteCompleted;
+            [Obsolete("This even is now obsolete. Use the Transition property exposed by InteractiveViewModels instead.")]
+            public event EventHandler ExecuteCompleted
+            {
+                add
+                {
+                    _enqueuingTransitionCommand.ExecuteCompleted += value;
+                }
+                remove
+                {
+                    _enqueuingTransitionCommand.ExecuteCompleted -= value;
+                }
+            }
 
             /// <summary>
             /// Checks whether the command can be executed with the provided <paramref name="parameter"/>.
@@ -344,7 +617,7 @@ namespace Andrei15193.Interactive
             /// Returns true if the command can execute; otherwise false.
             /// </returns>
             public bool CanExecute(object parameter)
-                => true;
+                => _enqueuingTransitionCommand.CanExecute(parameter);
 
             /// <summary>
             /// Enqueues a state transition on the underlying <see cref="InteractiveViewModel"/>.
@@ -352,37 +625,9 @@ namespace Andrei15193.Interactive
             /// <param name="parameter">
             /// An optional parameter to provide additional data for the command to process.
             /// </param>
-            public async void Execute(object parameter)
+            public void Execute(object parameter)
             {
-                var destinationState = _destinationState;
-                while (destinationState != null)
-                {
-                    var enqueuedTransitionTask = _interactiveViewModel.EnqueueTransitionToAsync(destinationState, parameter);
-                    try
-                    {
-                        await enqueuedTransitionTask;
-                        destinationState = null;
-                    }
-                    catch
-                    {
-                        if (_errorHandler == null)
-                            throw new InvalidOperationException("Unhandled exception by user code.", enqueuedTransitionTask.Exception);
-
-                        ErrorContext errorContext;
-                        if (enqueuedTransitionTask.IsCanceled)
-                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state);
-                        else
-                            errorContext = new ErrorContext(_interactiveViewModel, _interactiveViewModel._state, false, enqueuedTransitionTask.Exception);
-
-                        _errorHandler(errorContext);
-                        if (errorContext.NextState == null)
-                            throw new InvalidOperationException("Cannot transition to 'null' state.");
-
-                        destinationState = errorContext.NextState;
-                    }
-                }
-
-                ExecuteCompleted?.Invoke(this, EventArgs.Empty);
+                _enqueuingTransitionCommand.Execute(parameter);
             }
 
             /// <summary>
@@ -397,7 +642,7 @@ namespace Andrei15193.Interactive
             /// <paramref name="states"/>.
             /// </returns>
             public ICommand BindTo(IEnumerable<string> states)
-                => _interactiveViewModel.BindCommand(this, states);
+                => _enqueuingTransitionCommand.BindTo(states);
 
             /// <summary>
             /// Binds the command to the specified states.
@@ -411,7 +656,7 @@ namespace Andrei15193.Interactive
             /// <paramref name="states"/>.
             /// </returns>
             public ICommand BindTo(params string[] states)
-                => BindTo(states.AsEnumerable());
+                => _enqueuingTransitionCommand.BindTo(states);
         }
 
         private string _state = null;
@@ -732,7 +977,7 @@ namespace Andrei15193.Interactive
         /// <see cref="InteractiveViewModel"/>.
         /// </returns>
         protected TransitionCommand GetTransitionCommand(string destinationState)
-            => GetTransitionCommand(destinationState, null);
+            => new TransitionCommand(this, destinationState);
         /// <summary>
         /// Gets a <see cref="TransitionCommand"/> that can be exposed in order to
         /// trigger state transitions.
@@ -749,6 +994,9 @@ namespace Andrei15193.Interactive
         /// <see cref="TransitionToAsync(string,object)"/> on the current
         /// <see cref="InteractiveViewModel"/>.
         /// </returns>
+        [Obsolete(@"Error handling is no longer supported through a separate callback. Exceptions must be treated in callbacks associated with action states.
+
+Allowing InteractiveViewModels to not transition to any state (because of an uncaught exception) and remain ""stuck"" in an action state leads to ""partial"" transitions and inconsistencies when using commands to trigger transitions.")]
         protected TransitionCommand GetTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
             => new TransitionCommand(this, destinationState, errorHandler);
 
@@ -765,7 +1013,7 @@ namespace Andrei15193.Interactive
         /// <see cref="InteractiveViewModel"/>.
         /// </returns>
         protected EnqueuingTransitionCommand GetEnqueuingTransitionCommand(string destinationState)
-            => GetEnqueuingTransitionCommand(destinationState, null);
+            => new EnqueuingTransitionCommand(this, destinationState);
 
         /// <summary>
         /// Gets an <see cref="EnqueuingTransitionCommand"/> that can be exposed in order
@@ -783,6 +1031,9 @@ namespace Andrei15193.Interactive
         /// invoke <see cref="EnqueueTransitionToAsync(string,object)"/> on the current
         /// <see cref="InteractiveViewModel"/>.
         /// </returns>
+        [Obsolete(@"Error handling is no longer supported through a separate callback. Exceptions must be treated in callbacks associated with action states.
+
+Allowing InteractiveViewModels to not transition to any state (because of an uncaught exception) and remain ""stuck"" in an action state leads to ""partial"" transitions and inconsistencies when using commands to trigger transitions.")]
         protected EnqueuingTransitionCommand GetEnqueuingTransitionCommand(string destinationState, Action<ErrorContext> errorHandler)
             => new EnqueuingTransitionCommand(this, destinationState, errorHandler);
     }

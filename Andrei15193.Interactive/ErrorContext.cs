@@ -5,6 +5,9 @@ namespace Andrei15193.Interactive
     /// <summary>
     /// Represents the context in which an action has faulted or was canceled.
     /// </summary>
+    [Obsolete(@"Error handling is no longer supported through ErrorContext. Exceptions must be treated in callbacks associated with action states.
+
+Allowing InteractiveViewModels to not transition to any state (because of an uncaught exception) and remain ""stuck"" in an action state leads to ""partial"" transitions and inconsistencies when using commands to trigger transitions.")]
     public class ErrorContext
     {
         /// <summary>
