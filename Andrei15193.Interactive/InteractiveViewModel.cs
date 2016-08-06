@@ -793,12 +793,12 @@ namespace Andrei15193.Interactive
                     try
                     {
                         _isInActionState = true;
-                        using (var cancellationTokenSource = new CancellationTokenSource())
-                        {
-                            _cancelCommand.CancellationTokenSource = cancellationTokenSource;
-                            ViewModelState viewModelState;
-                            while (_states.TryGetValue(nextState, out viewModelState))
+
+                        ViewModelState viewModelState;
+                        while (_states.TryGetValue(nextState, out viewModelState))
+                            using (var cancellationTokenSource = new CancellationTokenSource())
                             {
+                                _cancelCommand.CancellationTokenSource = cancellationTokenSource;
                                 var actionStateContext = new ActionStateContext(this, _state, parameter);
 
                                 _state = nextState;
@@ -816,7 +816,6 @@ namespace Andrei15193.Interactive
                                     throw new InvalidOperationException("Cannot transition to 'null' state.");
                                 nextState = actionStateContext.NextState;
                             }
-                        }
                     }
                     finally
                     {
