@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andrei15193.Interactive", "Andrei15193.Interactive\Andrei15193.Interactive.csproj", "{A8E94CE4-AD21-4BA2-9280-B5614AF59980}"
 EndProject
@@ -10,6 +10,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andrei15193.Interactive.Tests.WindowsPhone", "Andrei15193.Interactive.Tests.WindowsPhone\Andrei15193.Interactive.Tests.WindowsPhone.csproj", "{1DE385BC-8F4A-42CA-BD30-AFEFF15CF220}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andrei15193.Interactive.Tests.Windows", "Andrei15193.Interactive.Tests.Windows\Andrei15193.Interactive.Tests.Windows.csproj", "{02378BCA-A70E-4578-BAB3-3FEFDBB234E3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{27F194B7-9631-41BF-8C3E-29E39BED2693}"
+	ProjectSection(SolutionItems) = preProject
+		license.md = license.md
+		readme.md = readme.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
