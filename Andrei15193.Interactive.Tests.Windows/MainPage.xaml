@@ -14,6 +14,12 @@
             x:Name="DynamicPropertyEquatableConverter" />
     </Page.Resources>
 
+    <i:Interactive.StatePageNavigators>
+        <i:PageNavigator
+            PageTypeName="Andrei15193.Interactive.Tests.Windows.ContentDialogPage"
+            State="State3" />
+    </i:Interactive.StatePageNavigators>
+
     <Page.DataContext>
         <local:TestInteractiveViewModel />
     </Page.DataContext>

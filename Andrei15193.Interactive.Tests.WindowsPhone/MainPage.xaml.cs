@@ -1,5 +1,4 @@
 ﻿using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
 
 namespace Andrei15193.Interactive.Tests.WindowsPhone
 {
@@ -9,8 +8,6 @@ namespace Andrei15193.Interactive.Tests.WindowsPhone
         public MainPage()
         {
             InitializeComponent();
-
-            NavigationCacheMode = NavigationCacheMode.Required;
         }
     }
 }

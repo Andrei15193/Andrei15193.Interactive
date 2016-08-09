@@ -40,6 +40,8 @@ will allow the selected item to not necessarily be "part" (as in the exact same 
 ItemsSource.
 * ProjectedObservableCollection, which is the equivalent of applying LINQ's Select on an ObservableCollection, used by
 **DynamicPropertyEquatableConverter**.
+* StatePageNavigators attached property which allows for page transitions to happen when an InteractiveViewModel chnages its
+state. The view model itself is obtained from the DataContext of the Page onto which IPageNavigator items are added.
 
 ### Stuff going out
 

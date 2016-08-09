@@ -44,12 +44,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ActionStateContext.cs" />
+    <Compile Include="BackPageNavigator.cs" />
     <Compile Include="CollectionInteractiveViewModel.cs" />
     <Compile Include="ContentDialogPage.cs" />
     <Compile Include="DynamicPropertyEquatable.cs" />
     <Compile Include="DynamicPropertyEquatableConverter.cs" />
+    <Compile Include="ForwardPageNavigator.cs" />
+    <Compile Include="IPageNavigator.cs" />
     <Compile Include="IReadOnlyObservableCollection.cs" />
     <Compile Include="ObservableCollectionExtensions.cs" />
+    <Compile Include="PageNavigator.cs" />
     <Compile Include="ProjectedObservableCollection.cs" />
     <Compile Include="Validation\AnyConstraint.cs" />
     <Compile Include="Validation\Constraint.cs" />

@@ -4,7 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Andrei15193.Interactive.Tests.WindowsPhone"
     xmlns:i="using:Andrei15193.Interactive"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    NavigationCacheMode="Required">
     <Page.Resources>
         <SolidColorBrush
             x:Name="Brush"
@@ -13,9 +14,17 @@
         <i:DynamicPropertyEquatableConverter
             x:Name="DynamicPropertyEquatableConverter" />
     </Page.Resources>
+
+    <i:Interactive.StatePageNavigators>
+        <i:PageNavigator
+            PageTypeName="Andrei15193.Interactive.Tests.WindowsPhone.ContentDialogPage"
+            State="State3" />
+    </i:Interactive.StatePageNavigators>
+
     <Page.DataContext>
         <local:TestInteractiveViewModel />
     </Page.DataContext>
+
     <Grid
         i:Interactive.VisualState="{Binding State}">
         <VisualStateManager.VisualStateGroups>

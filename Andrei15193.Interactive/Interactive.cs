@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -14,7 +17,8 @@ namespace Andrei15193.Interactive
         /// The <see cref="DependencyProperty"/> for specifying whether to use transitions or not.
         /// </summary>
         public static readonly DependencyProperty UseTransitionsProperty =
-            DependencyProperty.RegisterAttached("UseTransitions",
+            DependencyProperty.RegisterAttached(
+                "UseTransitions",
                 typeof(bool),
                 typeof(Interactive),
                 new PropertyMetadata(true));
@@ -51,7 +55,8 @@ namespace Andrei15193.Interactive
         /// This <see cref="DependencyProperty"/> is used internally, it is better not to change its value.
         /// </remarks>
         internal static readonly DependencyProperty IsSubscribedProperty =
-            DependencyProperty.RegisterAttached("IsSubscribed",
+            DependencyProperty.RegisterAttached(
+                "IsSubscribed",
                 typeof(bool),
                 typeof(Interactive),
                 new PropertyMetadata(false));
@@ -81,6 +86,88 @@ namespace Andrei15193.Interactive
             => dependencyObject.SetValue(IsSubscribedProperty, subscribed);
 
         /// <summary>
+        /// The <see cref="DependencyProperty"/> for specifying page navigators when an
+        /// <see cref="InteractiveViewModel"/> transitions to a state.
+        /// </summary>
+        public static readonly DependencyProperty StatePageNavigatorsProperty =
+            DependencyProperty.RegisterAttached(
+                "StatePageNavigators",
+                typeof(List<IPageNavigator>),
+                typeof(Interactive),
+                new PropertyMetadata(null));
+
+        /// <summary>
+        /// Gets the value of the <see cref="StatePageNavigatorsProperty"/> for the given <see cref="Page"/>.
+        /// </summary>
+        /// <param name="page">
+        /// The <see cref="Page"/> for which to get the <see cref="StatePageNavigatorsProperty"/> value.
+        /// </param>
+        /// <returns>
+        /// Returns an <see cref="List{IPageNavigator}"/> that can be modified to contain the <see cref="IPageNavigator"/>
+        /// to be invoked when <see cref="FrameworkElement.DataContext"/> (when it is an <see cref="InteractiveViewModel"/>)
+        /// of the provided <paramref name="page"/> transitions to a specific state.
+        /// </returns>
+        public static List<IPageNavigator> GetStatePageNavigators(Page page)
+        {
+            var pageNavigators = (List<IPageNavigator>)page.GetValue(StatePageNavigatorsProperty);
+            if (pageNavigators == null)
+            {
+                var pageNavigatorList = new PageNavigatorList(page);
+                page.DataContextChanged += (sender, e) => pageNavigatorList.InteractiveViewModel = (e.NewValue as InteractiveViewModel);
+
+                page.SetValue(StatePageNavigatorsProperty, pageNavigatorList);
+                pageNavigators = pageNavigatorList;
+            }
+
+            return pageNavigators;
+        }
+
+        private sealed class PageNavigatorList
+            : List<IPageNavigator>
+        {
+            private readonly Page _page;
+            private InteractiveViewModel _interactiveViewModel = null;
+
+            internal PageNavigatorList(Page page)
+            {
+                if (page == null)
+                    throw new ArgumentNullException(nameof(page));
+
+                _page = page;
+            }
+
+            internal InteractiveViewModel InteractiveViewModel
+            {
+                get
+                {
+                    return _interactiveViewModel;
+                }
+                set
+                {
+                    if (_interactiveViewModel != null)
+                        _interactiveViewModel.PropertyChanged -= _InteractiveViewModelPropertyChanged;
+
+                    _interactiveViewModel = value;
+
+                    if (_interactiveViewModel != null)
+                        _interactiveViewModel.PropertyChanged += _InteractiveViewModelPropertyChanged;
+                }
+            }
+
+            private void _InteractiveViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+            {
+                if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    var pageNavigator = Find(existingPageNavigator => (existingPageNavigator.State == _interactiveViewModel.State));
+
+                    Debug.WriteLineIf(pageNavigator == null, $"No page navigator was found for {_interactiveViewModel.State} state.");
+                    if (pageNavigator != null)
+                        pageNavigator.Navigate(_page.Frame);
+                }
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// The <see cref="DependencyProperty"/> for specifying the current <see cref="VisualState"/>
         /// of a control.
@@ -92,7 +179,8 @@ namespace Andrei15193.Interactive
         /// </para>
         /// </summary>
         public static readonly DependencyProperty VisualStateProperty =
-            DependencyProperty.RegisterAttached("VisualState",
+            DependencyProperty.RegisterAttached(
+                "VisualState",
                 typeof(string),
                 typeof(Interactive),
                 new PropertyMetadata(null, VisualStateChanged));
