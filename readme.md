@@ -42,9 +42,14 @@ ItemsSource.
 **DynamicPropertyEquatableConverter**.
 * StatePageNavigators attached property which allows for page transitions to happen when an InteractiveViewModel chnages its
 state. The view model itself is obtained from the DataContext of the Page onto which IPageNavigator items are added.
+* ConfirmDialogCommand, a wrapper command that first displays a confirmation MessageDialog. If the user confirms then the
+wrapped command is executed.
 
 ### Stuff going out
 
 * ErrorContext and all methods using it have been marked with **Obsolete**. Allowing InteractiveViewModels to not
 transition to any state (because of an uncaught exception) and remain "stuck" in an action state leads to "partial"
 transitions and inconsistencies when using commands to trigger transitions.
+* ContentDialogPage has been marked with **Obsolete**. Asynchronous commands may trigger page navigation when it is
+not desired. Use *StatePageNavigators* instead to trigger page navigation when an *InteractiveViewModel* reaches a
+specific *state*.

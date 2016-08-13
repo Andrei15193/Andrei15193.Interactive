@@ -31,6 +31,7 @@ namespace Andrei15193.Interactive
     /// to use instead of a ContentDialog control.
     /// </para>
     /// </remarks>
+    [Obsolete("Asynchronous commands may trigger page navigation when it is not desired. Use StatePageNavigators instead to trigger page navigation when an InteractiveViewModel reaches a specific state.")]
     public class ContentDialogPage
         : Page
     {

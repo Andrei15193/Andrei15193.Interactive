@@ -92,8 +92,15 @@
         <CommandBar>
             <AppBarButton
                 Icon="Accept"
-                Label="Transition"
-                Command="{Binding BeginTransitionCommand}" />
+                Label="Transition">
+                <AppBarButton.Command>
+                    <i:ConfirmDialogCommand
+                        Content="This will trigger a transition, continue?"
+                        SubmitText="transition"
+                        CancelText="cancel"
+                        Command="{Binding BeginTransitionCommand}" />
+                </AppBarButton.Command>
+            </AppBarButton>
         </CommandBar>
     </Page.BottomAppBar>
 </Page>

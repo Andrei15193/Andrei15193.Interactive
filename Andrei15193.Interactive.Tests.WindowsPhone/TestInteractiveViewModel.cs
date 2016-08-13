@@ -35,6 +35,13 @@ namespace Andrei15193.Interactive.Tests.WindowsPhone
             Items = new ReadOnlyObservableCollection<TestItem>(_items);
 
             CreateActionState(
+                "State1",
+                async context =>
+                {
+                    context.NextState = "State2";
+                    await Task.Delay(5000);
+                });
+            CreateActionState(
                 "State2",
                 async context =>
                 {

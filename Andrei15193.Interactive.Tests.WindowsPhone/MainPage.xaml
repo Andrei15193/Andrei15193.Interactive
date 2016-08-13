@@ -100,14 +100,29 @@
         <CommandBar>
             <AppBarButton
                 Icon="Accept"
-                Label="Transition"
-                Command="{Binding BeginTransitionCommand}" />
+                Label="Transition">
+                <AppBarButton.Command>
+                    <i:ConfirmDialogCommand
+                        Content="The will trigger a transition."
+                        SubmitText="transition"
+                        CancelText="cancel"
+                        Command="{Binding BeginTransitionCommand}" />
+                </AppBarButton.Command>
+            </AppBarButton>
             <CommandBar.SecondaryCommands>
                 <AppBarButton
                     Label="Go to content dialog page">
                     <AppBarButton.Command>
-                        <i:NavigateCommand
-                            Page="Andrei15193.Interactive.Tests.WindowsPhone.ContentDialogPage" />
+                        <i:ConfirmDialogCommand
+                            Title="Are you sure?"
+                            Content="You will navigate to a new page."
+                            SubmitText="navigate"
+                            CancelText="cancel">
+                            <i:ConfirmDialogCommand.Command>
+                                <i:NavigateCommand
+                                    Page="Andrei15193.Interactive.Tests.WindowsPhone.ContentDialogPage" />
+                            </i:ConfirmDialogCommand.Command>
+                        </i:ConfirmDialogCommand>
                     </AppBarButton.Command>
                 </AppBarButton>
             </CommandBar.SecondaryCommands>

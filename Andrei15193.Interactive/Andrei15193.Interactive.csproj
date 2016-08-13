@@ -46,6 +46,7 @@
     <Compile Include="ActionStateContext.cs" />
     <Compile Include="BackPageNavigator.cs" />
     <Compile Include="CollectionInteractiveViewModel.cs" />
+    <Compile Include="ConfirmDialogCommand.cs" />
     <Compile Include="ContentDialogPage.cs" />
     <Compile Include="DynamicPropertyEquatable.cs" />
     <Compile Include="DynamicPropertyEquatableConverter.cs" />

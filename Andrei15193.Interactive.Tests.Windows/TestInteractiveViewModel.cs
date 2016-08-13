@@ -42,6 +42,8 @@ namespace Andrei15193.Interactive.Tests.Windows
             BeginTransitionCommand = GetTransitionCommand("State2").BindTo("State1", "State3");
 
             TransitionToAsync("State1");
+
+            Task.Delay(5000).ContinueWith(delegate { TransitionToAsync("State2"); }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         public ICommand BeginTransitionCommand { get; }
