@@ -44,6 +44,7 @@ ItemsSource.
 state. The view model itself is obtained from the DataContext of the Page onto which IPageNavigator items are added.
 * ConfirmDialogCommand, a wrapper command that first displays a confirmation MessageDialog. If the user confirms then the
 wrapped command is executed.
+* MappingConverter, this is useful to map various InteractiveViewModel states to the same visual state.
 
 ### Stuff going out
 

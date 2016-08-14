@@ -53,6 +53,8 @@
     <Compile Include="ForwardPageNavigator.cs" />
     <Compile Include="IPageNavigator.cs" />
     <Compile Include="IReadOnlyObservableCollection.cs" />
+    <Compile Include="Mapping.cs" />
+    <Compile Include="MappingConverter.cs" />
     <Compile Include="ObservableCollectionExtensions.cs" />
     <Compile Include="PageNavigator.cs" />
     <Compile Include="ProjectedObservableCollection.cs" />
