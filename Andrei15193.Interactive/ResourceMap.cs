@@ -151,6 +151,51 @@ namespace Andrei15193.Interactive
         }
 
         /// <summary>
+        /// Asynchronously gets a resource.
+        /// </summary>
+        /// <typeparam name="TResource">
+        /// The type of the resource to get.
+        /// </typeparam>
+        /// <param name="name">
+        /// The name of the resource to get.
+        /// </param>
+        /// <param name="timeout">
+        /// A <see cref="TimeSpan"/> that indicates a timeout for which to wait for a resource
+        /// to be set.
+        /// </param>
+        /// <returns>
+        /// Returns a <see cref="Task{TResource}"/> that eventually provides a resource
+        /// with the given <paramref name="name"/> once it has been set.
+        /// </returns>
+        public async Task<TResource> GetAsync<TResource>(string name, TimeSpan timeout)
+        {
+            using (var cancellationTokenSource = new CancellationTokenSource(timeout))
+                return await GetAsync<TResource>(name, cancellationTokenSource.Token);
+        }
+
+        /// <summary>
+        /// Asynchronously gets a resource.
+        /// </summary>
+        /// <typeparam name="TResource">
+        /// The type of the resource to get.
+        /// </typeparam>
+        /// <param name="name">
+        /// The name of the resource to get.
+        /// </param>
+        /// <param name="millisecondsTimeout">
+        /// A timeout interval expressed in milliseconds.
+        /// </param>
+        /// <returns>
+        /// Returns a <see cref="Task{TResource}"/> that eventually provides a resource
+        /// with the given <paramref name="name"/> once it has been set.
+        /// </returns>
+        public async Task<TResource> GetAsync<TResource>(string name, int millisecondsTimeout)
+        {
+            using (var cancellationTokenSource = new CancellationTokenSource(millisecondsTimeout))
+                return await GetAsync<TResource>(name, cancellationTokenSource.Token);
+        }
+
+        /// <summary>
         /// Sets the given <paramref name="resource"/> under the provided <paramref name="name"/>.
         /// </summary>
         /// <typeparam name="TResource">

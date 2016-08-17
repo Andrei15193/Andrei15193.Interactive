@@ -145,5 +145,45 @@ namespace Andrei15193.Interactive.Tests
 
             Assert.IsTrue(resourceTask.IsCanceled);
         }
+
+        [TestMethod]
+        public async Task TestGettingAResourceWithATimeSpanTimeoutAndNotSettingItWillEventuallyCancelTheTask()
+        {
+            Task resourceTask = null;
+            try
+            {
+                var resourceName = "testResource";
+
+                resourceTask = ResourceMap.GetAsync<object>(resourceName, TimeSpan.FromSeconds(2));
+
+                await resourceTask;
+                Assert.Fail("Expected exception to be thrown.");
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            Assert.IsTrue(resourceTask.IsCanceled);
+        }
+
+        [TestMethod]
+        public async Task TestGettingAResourceWithAMillisecondsTimeoutAndNotSettingItWillEventuallyCancelTheTask()
+        {
+            Task resourceTask = null;
+            try
+            {
+                var resourceName = "testResource";
+
+                resourceTask = ResourceMap.GetAsync<object>(resourceName, 2000);
+
+                await resourceTask;
+                Assert.Fail("Expected exception to be thrown.");
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            Assert.IsTrue(resourceTask.IsCanceled);
+        }
     }
 }
