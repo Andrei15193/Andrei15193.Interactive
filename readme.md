@@ -45,6 +45,12 @@ state. The view model itself is obtained from the DataContext of the Page onto w
 * ConfirmDialogCommand, a wrapper command that first displays a confirmation MessageDialog. If the user confirms then the
 wrapped command is executed.
 * MappingConverter, this is useful to map various InteractiveViewModel states to the same visual state.
+* ResourceMap. Sometimes it is useful to provide resources (e.g.: other interactive view models) through properties
+rather than have a huge parameter list on the constructor, not to mention that for store and windows phone apps action
+parameter-less public constructor needs to be provided in order specify its instantiation in XAML. Awaitable resources
+aim to solve that problem by providing a task that can be awaited in an asynchronous method (e.g. the loading method
+of an InteractiveViewModel). The task will resume once a value has been set (which can happen after constructor
+has done initializing and the InteractiveViewModel is left in the loading state).
 
 ### Stuff going out
 

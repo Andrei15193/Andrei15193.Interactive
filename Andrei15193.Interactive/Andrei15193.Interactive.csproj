@@ -58,6 +58,7 @@
     <Compile Include="ObservableCollectionExtensions.cs" />
     <Compile Include="PageNavigator.cs" />
     <Compile Include="ProjectedObservableCollection.cs" />
+    <Compile Include="ResourceMap.cs" />
     <Compile Include="Validation\AnyConstraint.cs" />
     <Compile Include="Validation\Constraint.cs" />
     <Compile Include="Validation\Constraints.cs" />

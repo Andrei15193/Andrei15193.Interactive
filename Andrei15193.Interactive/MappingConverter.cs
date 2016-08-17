@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Markup;
 
 namespace Andrei15193.Interactive
 {
     /// <summary>
     /// Converts based on a given set of <see cref="Mapping"/>s.
     /// </summary>
+    [ContentProperty(Name = nameof(Mappings))]
     public class MappingConverter
         : IValueConverter
     {
