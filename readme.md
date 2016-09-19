@@ -60,3 +60,7 @@ transitions and inconsistencies when using commands to trigger transitions.
 * ContentDialogPage has been marked with **Obsolete**. Asynchronous commands may trigger page navigation when it is
 not desired. Use *StatePageNavigators* instead to trigger page navigation when an *InteractiveViewModel* reaches a
 specific *state*.
+* Constraints has been marked with **Obsolete**. Having a static class to act as a container for constraints raises
+more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens
+once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint
+provided to consumers (dependency injection is one way to do it).

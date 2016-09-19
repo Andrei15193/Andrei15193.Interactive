@@ -19,6 +19,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
 
         [TestCleanup]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestCleanup()
         {
             Constraints.DeregisterFor<object>();
@@ -27,6 +28,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
 
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestRegisteringAConstraintWillMakeItRetrievable()
         {
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
@@ -38,6 +40,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestTryingToRegisterAConstraintForTheSameTypeWithoutNameThrowsException()
         {
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
@@ -46,6 +49,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
 
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestRegisteringAConstraintWithANameWillMakeItRetrievableByThatName()
         {
             var constraintName = "test";
@@ -59,6 +63,7 @@ namespace Andrei15193.Interactive.Tests.Validation
             Assert.AreSame(expectedConstraint, actualConstraint);
         }
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestRegisteringTwoConstraintsWithDifferentNamesForTheSameTypeMakeThemRetrievableAccordingly()
         {
             var constraintName1 = "test 1";
@@ -82,6 +87,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestTryingToRegisterAConstraintForTheSameTypeAndNameThrowsException()
         {
             var constraintName = "test";
@@ -93,6 +99,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestNamesAreTrimmedWhenRegisteringConstraints()
         {
             var constraintName = "test";
@@ -105,12 +112,14 @@ namespace Andrei15193.Interactive.Tests.Validation
 
         [TestMethod]
         [ExpectedException(typeof(KeyNotFoundException))]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestGettingAConstraintForATypeThatDoesNotExistsThrowsException()
         {
             Constraints.GetFor<object>();
         }
         [TestMethod]
         [ExpectedException(typeof(KeyNotFoundException))]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestGettingAConstraintForATypeAndNameThatDoesNotExistsThrowsException()
         {
             var constraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
@@ -120,6 +129,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
 
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestTryingToGetAConstraintForATypeThatDoesNotExistsReturnsNull()
         {
             var expectedConstraint = Constraints.TryGetFor<object>();
@@ -127,6 +137,7 @@ namespace Andrei15193.Interactive.Tests.Validation
             Assert.IsNull(expectedConstraint);
         }
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestTryingToGetAConstraintForATypeAndNameThatDoesNotExistsThrowsException()
         {
             var constraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
@@ -138,6 +149,7 @@ namespace Andrei15193.Interactive.Tests.Validation
         }
 
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestDeregisteringAConstraintMakesItUnavailable()
         {
             var expectedConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
@@ -150,6 +162,7 @@ namespace Andrei15193.Interactive.Tests.Validation
             Assert.IsNull(actualConstraint);
         }
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestDeregisteringAConstraintWithANameMakesItUnavailable()
         {
             var constraintName = "test";
@@ -164,6 +177,7 @@ namespace Andrei15193.Interactive.Tests.Validation
             Assert.IsNull(actualConstraint);
         }
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestDeregisteringAConstraintAllowsADifferentOneToBeRegistered()
         {
             var deregisteredConstraint = Constraint.From<object>(value => Enumerable.Empty<ValidationError>());
@@ -179,6 +193,7 @@ namespace Andrei15193.Interactive.Tests.Validation
             Assert.AreSame(expectedConstraint, actualConstraint);
         }
         [TestMethod]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestDeregisteringAConstraintWithANameAllowsADifferentOneWithTheSameNameToBeRegistered()
         {
             var constraintName = "test";
@@ -199,12 +214,14 @@ namespace Andrei15193.Interactive.Tests.Validation
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestRegisteringANullConstraintThrowsException()
         {
             Constraints.RegisterFor<object>(null);
         }
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
+        [Obsolete("Having a static class to act as a container for constraints raises more issues than it solves (When and where should constraint registration happen? How is it ensured that it only happens once?). Instead of having a static container which increases coupling as it would be used extensively, have each constraint provided to consumers (dependency injection is one way to do it).")]
         public void TestRegisteringANullConstraintWithNameThrowsException()
         {
             Constraints.RegisterFor<object>(null, "test");
