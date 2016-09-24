@@ -51,6 +51,10 @@ parameter-less public constructor needs to be provided in order specify its inst
 aim to solve that problem by providing a task that can be awaited in an asynchronous method (e.g. the loading method
 of an InteractiveViewModel). The task will resume once a value has been set (which can happen after constructor
 has done initializing and the InteractiveViewModel is left in the loading state).
+* Added void returning methods for transitioning to initial states. Calling async methods in the constructor and having
+the operation fail or canceled may result in unexpected, difficult to debug, cases. Through this methods one can transition
+to an initial state. If it is an action state then an additional canceled and faulted state names (that must be quiet states)
+need to be specified in case the operation fails or is canceled.
 
 ### Stuff going out
 

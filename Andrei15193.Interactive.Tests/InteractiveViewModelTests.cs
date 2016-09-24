@@ -18,6 +18,8 @@ namespace Andrei15193.Interactive.Tests
         private const string SecondFollowUpActionState = "secondFollowUpActionTestState";
         private const string DestinationState = "destinationTestState";
         private const string FinalState = "finalTestState";
+        private const string CanceledState = "canceledTestState";
+        private const string FaultedState = "faultedTestState";
 
         private sealed class MockInteractiveViewModel<TDataModel>
             : InteractiveViewModel<TDataModel>
@@ -39,6 +41,13 @@ namespace Andrei15193.Interactive.Tests
             {
                 base.CreateActionState(name, cancelableAsyncAction);
             }
+
+            new public void TransitionToInitialQuietState(string initialQuietStateName)
+                => base.TransitionToInitialQuietState(initialQuietStateName);
+            new public void TransitionToInitialActionState(string initialActionStateName, string canceledState, string faultedState, object parameter)
+                => base.TransitionToInitialActionState(initialActionStateName, canceledState, faultedState, parameter);
+            new public void TransitionToInitialActionState(string initialActionStateName, string canceledState, string faultedState)
+                => base.TransitionToInitialActionState(initialActionStateName, canceledState, faultedState);
 
             new public Task TransitionToAsync(string state, object parameter)
                 => base.TransitionToAsync(state, parameter);
@@ -197,8 +206,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                await InteractiveViewModel.TransitionToAsync(InitialState);
-
                 InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
@@ -207,6 +214,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                         actionContext.NextState = DestinationState;
                         return Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
+
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 Assert.AreEqual(ActionState, InteractiveViewModel.State, ignoreCase: false);
@@ -227,8 +236,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                await InteractiveViewModel.TransitionToAsync(InitialState);
-
                 InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
@@ -239,6 +246,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
 
                         return Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
+
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 completeActionStateEvent.Set();
@@ -256,8 +265,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
 
             using (var completeActionStateEvent = new ManualResetEventSlim(false))
             {
-                await InteractiveViewModel.TransitionToAsync(InitialState);
-
                 InteractiveViewModel.CreateActionState(
                     ActionState,
                     actionContext =>
@@ -268,6 +275,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
 
                         return Task.Factory.StartNew(completeActionStateEvent.Wait);
                     });
+
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 var actionStateTransitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 completeActionStateEvent.Set();
@@ -366,7 +375,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
         public async Task TestTransitionFromPropertyChangedEventHandlerAfterActionStateCompleted()
         {
             var raiseCount = 0;
-            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             using (var reachedActionStateEvent = new ManualResetEventSlim(false))
             using (var continueActionStateTransitionEvent = new ManualResetEventSlim(false))
@@ -379,6 +387,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                         actionContext.NextState = DestinationState;
                         return Task.Factory.StartNew(continueActionStateTransitionEvent.Wait);
                     });
+
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 PropertyChangedEventHandler eventHandler = null;
                 eventHandler =
@@ -411,8 +421,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                     if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase))
                         stateChanges.Add(InteractiveViewModel.State);
                 };
-            await InteractiveViewModel.TransitionToAsync(InitialState);
-
             InteractiveViewModel.CreateActionState(
                 ActionState,
                 context =>
@@ -426,6 +434,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                 {
                     context.NextState = DestinationState;
                 });
+
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             await InteractiveViewModel.TransitionToAsync(ActionState);
 
@@ -484,8 +494,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
         [TestMethod]
         public async Task TestCancelableActionStatesReceiveACancelableCancellationToken()
         {
-            await InteractiveViewModel.TransitionToAsync(InitialState);
-
             InteractiveViewModel.CreateActionState(
                 ActionState,
                 (context, cancellationToken) =>
@@ -494,6 +502,7 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                     Assert.IsTrue(cancellationToken.CanBeCanceled);
                     return Task.FromResult<object>(null);
                 });
+            await InteractiveViewModel.TransitionToAsync(InitialState);
 
             await InteractiveViewModel.TransitionToAsync(ActionState);
         }
@@ -501,8 +510,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
         [TestMethod]
         public async Task TestWhileInACancelableActionStateTheCancelCommandCanBeExecuted()
         {
-            await InteractiveViewModel.TransitionToAsync(InitialState);
-
             using (var completeActionEvent = new ManualResetEventSlim(false))
             using (var reachedActionStateEvent = new ManualResetEventSlim(false))
             {
@@ -514,6 +521,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                         context.NextState = DestinationState;
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
+
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
@@ -530,8 +539,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
         [TestMethod]
         public async Task TestWhileInAnActionStateThatCannotBeCanceledTheCancelComamndCannotBeExecuted()
         {
-            await InteractiveViewModel.TransitionToAsync(InitialState);
-
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
                 InteractiveViewModel.CreateActionState(
@@ -541,6 +548,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                         context.NextState = DestinationState;
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
+
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
@@ -556,8 +565,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
         [TestMethod]
         public async Task TestChainedCancelableAndNonCancelableActionStatesEnableAndDisableCancelCommand()
         {
-            await InteractiveViewModel.TransitionToAsync(InitialState);
-
             using (var reachedActionStateEvent = new ManualResetEventSlim(false))
             using (var transitionedToFollowUpStateEvent = new ManualResetEventSlim(false))
             using (var completeActionEvent = new ManualResetEventSlim(false))
@@ -588,6 +595,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
 
+                await InteractiveViewModel.TransitionToAsync(InitialState);
+
                 var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
                 await Task.Factory.StartNew(reachedActionStateEvent.Wait);
@@ -611,8 +620,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
             var raiseCount = 0;
             InteractiveViewModel.CancelCommand.CanExecuteChanged += delegate { raiseCount++; };
 
-            await InteractiveViewModel.TransitionToAsync(InitialState);
-
             using (var reachedActionStateEvent = new ManualResetEventSlim(false))
             using (var completeActionEvent = new ManualResetEventSlim(false))
             {
@@ -624,6 +631,8 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                         context.NextState = DestinationState;
                         return Task.Factory.StartNew(completeActionEvent.Wait);
                     });
+
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 var actionStateTranstionTask = InteractiveViewModel.TransitionToAsync(ActionState);
 
@@ -650,8 +659,6 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
         [TestMethod]
         public async Task TestExecutingTheCancelCommandSignalsTheCancellationToken()
         {
-            await InteractiveViewModel.TransitionToAsync(InitialState);
-
             using (var cancelSignledEvent = new ManualResetEventSlim(false))
             {
                 InteractiveViewModel.CreateActionState(
@@ -662,6 +669,7 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
                         await Task.Factory.StartNew(cancelSignledEvent.Wait);
                         Assert.IsTrue(cancellationToken.IsCancellationRequested);
                     });
+                await InteractiveViewModel.TransitionToAsync(InitialState);
 
                 var actionStateTranstitionTask = InteractiveViewModel.TransitionToAsync(ActionState);
                 InteractiveViewModel.CancelCommand.Execute(null);
@@ -1402,6 +1410,172 @@ Allowing InteractiveViewModels to not transition to any state (because of an unc
 
             var result = await transition;
             Assert.AreEqual(ActionState, result);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TestCannotCreateAnActionStateAfterTransitioningToInitialQuietState()
+        {
+            InteractiveViewModel.TransitionToInitialQuietState(DestinationState);
+
+            InteractiveViewModel.CreateActionState(ActionState, context => { context.NextState = FinalState; });
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TestCannotCreateAnActionStateAfterTransitioningToInitialActionState()
+        {
+            InteractiveViewModel.CreateActionState(ActionState, context => { context.NextState = FinalState; });
+
+            InteractiveViewModel.TransitionToInitialActionState(ActionState, CanceledState, FaultedState);
+
+            InteractiveViewModel.CreateActionState(FollowUpActionState, context => { context.NextState = FinalState; });
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TestCannotCreateAnActionStateAfterTransitioningToAState()
+        {
+            InteractiveViewModel.TransitionToAsync(DestinationState);
+
+            InteractiveViewModel.CreateActionState(ActionState, context => { context.NextState = FinalState; });
+        }
+
+        [TestMethod]
+        public void TestTranisitoningToAnInitialQuietState()
+        {
+            InteractiveViewModel.TransitionToInitialQuietState(DestinationState);
+
+            Assert.AreEqual(DestinationState, InteractiveViewModel.State);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestTransitioningToAnInitialQueitStateThatIsActuallyAnActionStateThrowsException()
+        {
+            InteractiveViewModel.CreateActionState(ActionState, context => { context.NextState = DestinationState; });
+
+            InteractiveViewModel.TransitionToInitialQuietState(ActionState);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task TestTransitioningToAnInitialQuietStateWhileTheViewModelHasAlreadyTransitionedToAStateThrowsException()
+        {
+            await InteractiveViewModel.TransitionToAsync(FinalState);
+
+            InteractiveViewModel.TransitionToInitialQuietState(DestinationState);
+        }
+
+        [TestMethod]
+        public async Task TestTranisitoningToAnInitialActionState()
+        {
+            using (var actionStateCompletedEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    context =>
+                    {
+                        context.NextState = DestinationState;
+                        actionStateCompletedEvent.Set();
+                    });
+                InteractiveViewModel.TransitionToInitialActionState(ActionState, CanceledState, FaultedState);
+
+                await Task.Factory.StartNew(actionStateCompletedEvent.Wait);
+
+                Assert.AreEqual(DestinationState, InteractiveViewModel.State);
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestTransitioningToAnInitialActionStateThatIsActuallyAQuietStateThrowsException()
+        {
+            InteractiveViewModel.TransitionToInitialActionState(DestinationState, CanceledState, FaultedState);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task TestTransitioningToAnInitialActionStateWhileTheViewModelHasAlreadyTransitionedToAStateThrowsException()
+        {
+            InteractiveViewModel.CreateActionState(ActionState, context => { context.NextState = DestinationState; });
+
+            await InteractiveViewModel.TransitionToAsync(FinalState);
+
+            InteractiveViewModel.TransitionToInitialActionState(ActionState, CanceledState, FaultedState);
+        }
+
+        [TestMethod]
+        public async Task TestTransitioningToAnInitialActionStateThatIsCanceledLeavesTheViewModelInTheSpecifiedCanceledState()
+        {
+            using (var viewModelReachedCancelStateEvent = new ManualResetEventSlim(false))
+            using (var cancelEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.PropertyChanged +=
+                    (sender, e) =>
+                    {
+                        if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase)
+                            && InteractiveViewModel.State == CanceledState)
+                            viewModelReachedCancelStateEvent.Set();
+                    };
+
+                InteractiveViewModel.CreateActionState(
+                    ActionState,
+                    async (context, cancellationToken) =>
+                    {
+                        context.NextState = DestinationState;
+                        await Task.Factory.StartNew(cancelEvent.Wait);
+                        cancellationToken.ThrowIfCancellationRequested();
+                    });
+
+                InteractiveViewModel.TransitionToInitialActionState(ActionState, CanceledState, FaultedState);
+                InteractiveViewModel.CancelCommand.Execute(null);
+                cancelEvent.Set();
+
+                await Task.Factory.StartNew(viewModelReachedCancelStateEvent.Wait);
+            }
+
+            Assert.AreEqual(CanceledState, InteractiveViewModel.State);
+        }
+
+        [TestMethod]
+        public async Task TestTransitioningToAnInitialActionStateThatIsFaultedLeavesTheViewModelInTheSpecifiedFaultedState()
+        {
+            using (var viewModelReachedFaultedStateEvent = new ManualResetEventSlim(false))
+            {
+                InteractiveViewModel.PropertyChanged +=
+                    (sender, e) =>
+                    {
+                        if (nameof(InteractiveViewModel.State).Equals(e.PropertyName, StringComparison.OrdinalIgnoreCase)
+                            && InteractiveViewModel.State == FaultedState)
+                            viewModelReachedFaultedStateEvent.Set();
+                    };
+                InteractiveViewModel.CreateActionState(ActionState, context => { throw new Exception(); });
+                InteractiveViewModel.TransitionToInitialActionState(ActionState, CanceledState, FaultedState);
+                await Task.Factory.StartNew(viewModelReachedFaultedStateEvent.Wait);
+
+                Assert.AreEqual(FaultedState, InteractiveViewModel.State);
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestTransitioningToAnInitialActionStateWhereTheCanceledStateIsActuallyAnActionStateItselfThrowsException()
+        {
+            InteractiveViewModel.CreateActionState(ActionState, context => { context.NextState = DestinationState; });
+            InteractiveViewModel.CreateActionState(CanceledState, context => { context.NextState = FinalState; });
+
+            InteractiveViewModel.TransitionToInitialActionState(ActionState, CanceledState, FaultedState);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestTransitioningToAnInitialActionStateWhereTheFaultedStateIsActuallyAnActionStateItselfThrowsException()
+        {
+            InteractiveViewModel.CreateActionState(ActionState, context => { context.NextState = DestinationState; });
+            InteractiveViewModel.CreateActionState(FaultedState, context => { context.NextState = FinalState; });
+
+            InteractiveViewModel.TransitionToInitialActionState(ActionState, CanceledState, FaultedState);
         }
     }
 }

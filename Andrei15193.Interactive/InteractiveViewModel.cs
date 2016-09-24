@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -659,12 +660,103 @@ namespace Andrei15193.Interactive
                 => _enqueuingTransitionCommand.BindTo(states);
         }
 
+        private sealed class ActionStatesCollection
+            : IDictionary<string, ViewModelState>
+        {
+            private bool _isFrozen = false;
+            private readonly Dictionary<string, ViewModelState> _actionStates = new Dictionary<string, ViewModelState>(StateStringComparer);
+
+            public ViewModelState this[string stateName]
+            {
+                get
+                {
+                    return _actionStates[stateName];
+                }
+                set
+                {
+                    _EnsureIsNotFrozen();
+                    throw new NotImplementedException();
+                }
+            }
+
+            public int Count
+                => _actionStates.Count;
+
+            public bool IsReadOnly
+                => _isFrozen;
+
+            public ICollection<string> Keys
+                => _actionStates.Keys;
+
+            public ICollection<ViewModelState> Values
+                => _actionStates.Values;
+
+            public void Add(string stateName, ViewModelState state)
+            {
+                _EnsureIsNotFrozen();
+                _actionStates.Add(stateName, state);
+            }
+            void ICollection<KeyValuePair<string, ViewModelState>>.Add(KeyValuePair<string, ViewModelState> item)
+            {
+                _EnsureIsNotFrozen();
+                ((ICollection<KeyValuePair<string, ViewModelState>>)_actionStates).Add(item);
+            }
+
+            public void Clear()
+            {
+                _EnsureIsNotFrozen();
+                _actionStates.Clear();
+            }
+
+            public bool Contains(KeyValuePair<string, ViewModelState> item)
+                => _actionStates.Contains(item);
+
+            public bool ContainsKey(string stateName)
+                => _actionStates.ContainsKey(stateName);
+
+            public bool TryGetValue(string stateName, out ViewModelState state)
+                => _actionStates.TryGetValue(stateName, out state);
+
+            void ICollection<KeyValuePair<string, ViewModelState>>.CopyTo(KeyValuePair<string, ViewModelState>[] array, int arrayIndex)
+            {
+                ((ICollection<KeyValuePair<string, ViewModelState>>)_actionStates).CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(string stateName)
+            {
+                _EnsureIsNotFrozen();
+                return _actionStates.Remove(stateName);
+            }
+            bool ICollection<KeyValuePair<string, ViewModelState>>.Remove(KeyValuePair<string, ViewModelState> item)
+            {
+                _EnsureIsNotFrozen();
+                return ((ICollection<KeyValuePair<string, ViewModelState>>)_actionStates).Remove(item);
+            }
+
+
+            public IEnumerator<KeyValuePair<string, ViewModelState>> GetEnumerator()
+                => _actionStates.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator()
+                => GetEnumerator();
+
+            public void Freze()
+            {
+                _isFrozen = true;
+            }
+
+            private void _EnsureIsNotFrozen()
+            {
+                if (_isFrozen)
+                    throw new InvalidOperationException("The action states are already in use and can no longer be configured. Configure all action states before transitioning to any state (quiet or action).");
+            }
+        }
+
         private string _state = null;
         private bool _isInActionState = false;
         private string _lastEnqueuedState = null;
         private Task<string> _lastTransitionTask = Task.FromResult<string>(null);
         private readonly CancellationCommand _cancelCommand = new CancellationCommand();
-        private readonly IDictionary<string, ViewModelState> _states = new Dictionary<string, ViewModelState>(StateStringComparer);
+        private readonly ActionStatesCollection _actionStates = new ActionStatesCollection();
 
         /// <summary>
         /// Creates a new <see cref="InteractiveViewModel"/> instance.
@@ -730,7 +822,7 @@ namespace Andrei15193.Interactive
         /// </param>
         protected void CreateActionState(string name, Action<ActionStateContext> action)
         {
-            _states.Add(
+            _actionStates.Add(
                 name,
                 new ViewModelState(name, action));
         }
@@ -745,7 +837,7 @@ namespace Andrei15193.Interactive
         /// </param>
         protected void CreateActionState(string name, Func<ActionStateContext, Task> asyncAction)
         {
-            _states.Add(
+            _actionStates.Add(
                 name,
                 new ViewModelState(name, asyncAction));
         }
@@ -760,9 +852,91 @@ namespace Andrei15193.Interactive
         /// </param>
         protected void CreateActionState(string name, Func<ActionStateContext, CancellationToken, Task> cancelableAsyncAction)
         {
-            _states.Add(
+            _actionStates.Add(
                 name,
                 new ViewModelState(name, cancelableAsyncAction));
+        }
+
+        /// <summary>
+        /// Transitions to the initial state. This method should be called from the
+        /// constructor instead of calling <see cref="TransitionToAsync(string)"/> or
+        /// any of its overloads.
+        /// </summary>
+        /// <param name="initialActionStateName">
+        /// The name of the initial state.
+        /// </param>
+        /// <param name="canceledState">
+        /// The name of the state to transition to in case the initial action is canceled.
+        /// </param>
+        /// <param name="faultedState">
+        /// The name of the state to transition to in case the initial action fails.
+        /// </param>
+        /// <param name="parameter">
+        /// A parameter containing additional data that an action state might use.
+        /// </param>
+        protected void TransitionToInitialActionState(string initialActionStateName, string canceledState, string faultedState, object parameter)
+        {
+            if (!_actionStates.ContainsKey(initialActionStateName))
+                throw new ArgumentException("The initial state is not an action state. Use the TransitionToInitialQuietState method to transition to an initial quiet state.", nameof(initialActionStateName));
+            if (_actionStates.ContainsKey(canceledState))
+                throw new ArgumentException("The canceled state must be a quiet state.", nameof(canceledState));
+            if (_actionStates.ContainsKey(faultedState))
+                throw new ArgumentException("The faulted state must be a quiet state.", nameof(faultedState));
+            if (_state != null)
+                throw new InvalidOperationException("Cannot transition to an initial state if the view model has already transitioned to a state.");
+
+            Action transitionAction =
+                async delegate
+                {
+                    var transitionTask = TransitionToAsync(initialActionStateName, parameter);
+                    try
+                    {
+                        await transitionTask;
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.WriteLine(exception);
+                        if (transitionTask.IsCanceled)
+                            State = canceledState;
+                        else
+                            State = faultedState;
+                    }
+                };
+            transitionAction.Invoke();
+        }
+        /// <summary>
+        /// Transitions to the initial state. This method should be called from the
+        /// constructor instead of calling <see cref="TransitionToAsync(string)"/> or
+        /// any of its overloads.
+        /// </summary>
+        /// <param name="initialActionStateName">
+        /// The name of the initial state.
+        /// </param>
+        /// <param name="canceledState">
+        /// The name of the state to transition to in case the initial action is canceled.
+        /// </param>
+        /// <param name="faultedState">
+        /// The name of the state to transition to in case the initial action fails.
+        /// </param>
+        protected void TransitionToInitialActionState(string initialActionStateName, string canceledState, string faultedState)
+            => TransitionToInitialActionState(initialActionStateName, canceledState, faultedState, null);
+        /// <summary>
+        /// Transitions to the initial state. This method should be called from the
+        /// constructor instead of calling <see cref="TransitionToAsync(string)"/> or
+        /// any of its overloads.
+        /// </summary>
+        /// <param name="initialQuietStateName">
+        /// The name of the initial state.
+        /// </param>
+        protected void TransitionToInitialQuietState(string initialQuietStateName)
+        {
+            _actionStates.Freze();
+            if (_actionStates.ContainsKey(initialQuietStateName))
+                throw new ArgumentException("Having an initial action state may make the view model behave unexpectedly if the operation would be canceled or faulted.", nameof(initialQuietStateName));
+            if (_state != null)
+                throw new InvalidOperationException("Cannot transition to an initial state if the view model has already transitioned to a state.");
+
+            State = initialQuietStateName;
         }
 
         /// <summary>
@@ -780,53 +954,52 @@ namespace Andrei15193.Interactive
         /// when the <see cref="InteractiveViewModel"/> will finally transition into a
         /// quiet state or become faulted or canceled.
         /// </returns>
-        protected Task<string> TransitionToAsync(string state, object parameter)
-            => _lastTransitionTask = new Func<Task<string>>(
-                async delegate
-                {
-                    if (state == null)
-                        throw new ArgumentNullException(nameof(state));
-                    if (_isInActionState)
-                        throw new InvalidOperationException("Cannot transition to a different state while in an action state.");
+        protected Task<string> TransitionToAsync(string state, object parameter) => _lastTransitionTask = new Func<Task<string>>(async delegate
+        {
+            _actionStates.Freze();
+            if (state == null)
+                throw new ArgumentNullException(nameof(state));
+            if (_isInActionState)
+                throw new InvalidOperationException("Cannot transition to a different state while in an action state.");
 
-                    var nextState = state;
-                    try
+            var nextState = state;
+            try
+            {
+                _isInActionState = true;
+
+                ViewModelState viewModelState;
+                while (_actionStates.TryGetValue(nextState, out viewModelState))
+                    using (var cancellationTokenSource = new CancellationTokenSource())
                     {
-                        _isInActionState = true;
+                        _cancelCommand.CancellationTokenSource = cancellationTokenSource;
+                        var actionStateContext = new ActionStateContext(this, _state, parameter);
 
-                        ViewModelState viewModelState;
-                        while (_states.TryGetValue(nextState, out viewModelState))
-                            using (var cancellationTokenSource = new CancellationTokenSource())
-                            {
-                                _cancelCommand.CancellationTokenSource = cancellationTokenSource;
-                                var actionStateContext = new ActionStateContext(this, _state, parameter);
+                        _state = nextState;
+                        await Task.Yield();
+                        State = nextState;
 
-                                _state = nextState;
-                                await Task.Yield();
-                                State = nextState;
+                        if (viewModelState.IsCancellable)
+                            _cancelCommand.CanExecuteCommand = true;
+                        else
+                            _cancelCommand.CanExecuteCommand = false;
 
-                                if (viewModelState.IsCancellable)
-                                    _cancelCommand.CanExecuteCommand = true;
-                                else
-                                    _cancelCommand.CanExecuteCommand = false;
+                        await viewModelState.ExecuteAsync(actionStateContext, cancellationTokenSource.Token);
 
-                                await viewModelState.ExecuteAsync(actionStateContext, cancellationTokenSource.Token);
-
-                                if (actionStateContext.NextState == null)
-                                    throw new InvalidOperationException("Cannot transition to 'null' state.");
-                                nextState = actionStateContext.NextState;
-                            }
+                        if (actionStateContext.NextState == null)
+                            throw new InvalidOperationException("Cannot transition to 'null' state.");
+                        nextState = actionStateContext.NextState;
                     }
-                    finally
-                    {
-                        _cancelCommand.CanExecuteCommand = false;
-                        _cancelCommand.CancellationTokenSource = null;
-                        _isInActionState = false;
-                    }
+            }
+            finally
+            {
+                _cancelCommand.CanExecuteCommand = false;
+                _cancelCommand.CancellationTokenSource = null;
+                _isInActionState = false;
+            }
 
-                    State = nextState;
-                    return nextState;
-                }).Invoke();
+            State = nextState;
+            return nextState;
+        }).Invoke();
         /// <summary>
         /// Transitions the <see cref="InteractiveViewModel"/> to the given <paramref name="state"/>.
         /// </summary>
