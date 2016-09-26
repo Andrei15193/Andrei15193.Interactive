@@ -11,6 +11,6 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <copyright>Copyright 2016</copyright>
-    <tags>interactive library asynchronous</tags>
+    <tags>interactive library asynchronous ui user interface</tags>
   </metadata>
 </package>
