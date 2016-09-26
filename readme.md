@@ -55,6 +55,11 @@ has done initializing and the InteractiveViewModel is left in the loading state)
 the operation fail or canceled may result in unexpected, difficult to debug, cases. Through this methods one can transition
 to an initial state. If it is an action state then an additional canceled and faulted state names (that must be quiet states)
 need to be specified in case the operation fails or is canceled.
+* Added CannotExecuteDialogCommand to accommodate for the bottom app bar button cases when a button does not change its enabled
+state eventhough the CanExecuteChanged event has been raised. This usually happens when there is a control covering the
+phone screen completely such as a ComboBox with many items. If the selected item is bound to an InteractiveViewModel property
+and upon selecting an item an ICommand that is bound to an AppBarButton on the BottomAppBar becomes enabled the button will
+not update.
 
 ### Stuff going out
 

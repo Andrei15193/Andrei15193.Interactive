@@ -15,7 +15,7 @@ namespace Andrei15193.Interactive
         : DependencyObject, ICommand
     {
         /// <summary>
-        /// The <see cref="DependencyProperty"/> for the title of the configm <see cref="MessageDialog"/>.
+        /// The <see cref="DependencyProperty"/> for the title of the confirm <see cref="MessageDialog"/>.
         /// </summary>
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register(
@@ -40,7 +40,7 @@ namespace Andrei15193.Interactive
         }
 
         /// <summary>
-        /// The <see cref="DependencyProperty"/> for the content of the configm <see cref="MessageDialog"/>.
+        /// The <see cref="DependencyProperty"/> for the content of the confirm <see cref="MessageDialog"/>.
         /// </summary>
         public static readonly DependencyProperty ContentProperty =
             DependencyProperty.Register(
