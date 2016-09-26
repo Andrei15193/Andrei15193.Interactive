@@ -33,19 +33,19 @@ Version 1.1
 -----------
 
 * Bug fixes.
-* DynamicPropertyEquatable, some collection controls, such as combo boxes, require that the selected item that we bind to
+* Added DynamicPropertyEquatable, some collection controls, such as combo boxes, require that the selected item that we bind to
 to be in the collection we provide as ItemsSource. The **DynamicPropertyEquatable** and **DynamicPropertyEquatableConverter**
 help resolve this issue allowing a property path to be specified, in XAML, which should be used to compare items. this
 will allow the selected item to not necessarily be "part" (as in the exact same instance) of the collection provided to
 ItemsSource.
-* ProjectedObservableCollection, which is the equivalent of applying LINQ's Select on an ObservableCollection, used by
+* Added ProjectedObservableCollection, which is the equivalent of applying LINQ's Select on an ObservableCollection, used by
 **DynamicPropertyEquatableConverter**.
-* StatePageNavigators attached property which allows for page transitions to happen when an InteractiveViewModel chnages its
+* Added StatePageNavigators attached property which allows for page transitions to happen when an InteractiveViewModel chnages its
 state. The view model itself is obtained from the DataContext of the Page onto which IPageNavigator items are added.
-* ConfirmDialogCommand, a wrapper command that first displays a confirmation MessageDialog. If the user confirms then the
+* Added ConfirmDialogCommand, a wrapper command that first displays a confirmation MessageDialog. If the user confirms then the
 wrapped command is executed.
-* MappingConverter, this is useful to map various InteractiveViewModel states to the same visual state.
-* ResourceMap. Sometimes it is useful to provide resources (e.g.: other interactive view models) through properties
+* Added MappingConverter, this is useful to map various InteractiveViewModel states to the same visual state.
+* Added ResourceMap. Sometimes it is useful to provide resources (e.g.: other interactive view models) through properties
 rather than have a huge parameter list on the constructor, not to mention that for store and windows phone apps action
 parameter-less public constructor needs to be provided in order specify its instantiation in XAML. Awaitable resources
 aim to solve that problem by providing a task that can be awaited in an asynchronous method (e.g. the loading method
